@@ -15,9 +15,9 @@ function saveResult(result: Result) {
 
 export async function analyzePhoto(quizAnswers: string[], photoFile: File): Promise<Result> {
   await delay(500);
-  const key = quizAnswers[3] === pl.quiz.questions[3].answers[0]
-    ? (quizAnswers[5] === pl.quiz.questions[5].answers[2] ? "autumn" : "spring")
-    : (quizAnswers[5] === pl.quiz.questions[5].answers[3] ? "winter" : "summer");
+  const key = quizAnswers[3] === "Złotej"
+    ? (quizAnswers[5] === "Ciepłych i głębokich" ? "autumn" : "spring")
+    : (quizAnswers[5] === "Wyrazistych i kontrastowych" ? "winter" : "summer");
   const season = pl.mock.seasons[key];
   const palette = pl.mock.palettes[key];
   const result: Result = {
