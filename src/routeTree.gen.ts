@@ -10,33 +10,128 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OdstapienieOdUmowyRouteImport } from './routes/odstapienie-od-umowy'
+import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
+import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
+import { Route as RegulaminRouteImport } from './routes/regulamin'
+import { Route as TestRouteImport } from './routes/test'
+import { Route as ZdjecieRouteImport } from './routes/zdjecie'
+import { Route as WynikIdRouteImport } from './routes/wynik.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OdstapienieOdUmowyRoute = OdstapienieOdUmowyRouteImport.update({
+  id: '/odstapienie-od-umowy',
+  path: '/odstapienie-od-umowy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PolitykaCookiesRoute = PolitykaCookiesRouteImport.update({
+  id: '/polityka-cookies',
+  path: '/polityka-cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PolitykaPrywatnosciRoute = PolitykaPrywatnosciRouteImport.update({
+  id: '/polityka-prywatnosci',
+  path: '/polityka-prywatnosci',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegulaminRoute = RegulaminRouteImport.update({
+  id: '/regulamin',
+  path: '/regulamin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestRoute = TestRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZdjecieRoute = ZdjecieRouteImport.update({
+  id: '/zdjecie',
+  path: '/zdjecie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WynikIdRoute = WynikIdRouteImport.update({
+  id: '/wynik/$id',
+  path: '/wynik/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
+  '/polityka-cookies': typeof PolitykaCookiesRoute
+  '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
+  '/regulamin': typeof RegulaminRoute
+  '/test': typeof TestRoute
+  '/zdjecie': typeof ZdjecieRoute
+  '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
+  '/polityka-cookies': typeof PolitykaCookiesRoute
+  '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
+  '/regulamin': typeof RegulaminRoute
+  '/test': typeof TestRoute
+  '/zdjecie': typeof ZdjecieRoute
+  '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
+  '/polityka-cookies': typeof PolitykaCookiesRoute
+  '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
+  '/regulamin': typeof RegulaminRoute
+  '/test': typeof TestRoute
+  '/zdjecie': typeof ZdjecieRoute
+  '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/odstapienie-od-umowy'
+    | '/polityka-cookies'
+    | '/polityka-prywatnosci'
+    | '/regulamin'
+    | '/test'
+    | '/zdjecie'
+    | '/wynik/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/odstapienie-od-umowy'
+    | '/polityka-cookies'
+    | '/polityka-prywatnosci'
+    | '/regulamin'
+    | '/test'
+    | '/zdjecie'
+    | '/wynik/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/odstapienie-od-umowy'
+    | '/polityka-cookies'
+    | '/polityka-prywatnosci'
+    | '/regulamin'
+    | '/test'
+    | '/zdjecie'
+    | '/wynik/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OdstapienieOdUmowyRoute: typeof OdstapienieOdUmowyRoute
+  PolitykaCookiesRoute: typeof PolitykaCookiesRoute
+  PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
+  RegulaminRoute: typeof RegulaminRoute
+  TestRoute: typeof TestRoute
+  ZdjecieRoute: typeof ZdjecieRoute
+  WynikIdRoute: typeof WynikIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +143,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/odstapienie-od-umowy': {
+      id: '/odstapienie-od-umowy'
+      path: '/odstapienie-od-umowy'
+      fullPath: '/odstapienie-od-umowy'
+      preLoaderRoute: typeof OdstapienieOdUmowyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/polityka-cookies': {
+      id: '/polityka-cookies'
+      path: '/polityka-cookies'
+      fullPath: '/polityka-cookies'
+      preLoaderRoute: typeof PolitykaCookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/polityka-prywatnosci': {
+      id: '/polityka-prywatnosci'
+      path: '/polityka-prywatnosci'
+      fullPath: '/polityka-prywatnosci'
+      preLoaderRoute: typeof PolitykaPrywatnosciRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/regulamin': {
+      id: '/regulamin'
+      path: '/regulamin'
+      fullPath: '/regulamin'
+      preLoaderRoute: typeof RegulaminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test': {
+      id: '/test'
+      path: '/test'
+      fullPath: '/test'
+      preLoaderRoute: typeof TestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zdjecie': {
+      id: '/zdjecie'
+      path: '/zdjecie'
+      fullPath: '/zdjecie'
+      preLoaderRoute: typeof ZdjecieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wynik/$id': {
+      id: '/wynik/$id'
+      path: '/wynik/$id'
+      fullPath: '/wynik/$id'
+      preLoaderRoute: typeof WynikIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OdstapienieOdUmowyRoute: OdstapienieOdUmowyRoute,
+  PolitykaCookiesRoute: PolitykaCookiesRoute,
+  PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
+  RegulaminRoute: RegulaminRoute,
+  TestRoute: TestRoute,
+  ZdjecieRoute: ZdjecieRoute,
+  WynikIdRoute: WynikIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
