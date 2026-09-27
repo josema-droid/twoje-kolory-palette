@@ -16,6 +16,7 @@ import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywa
 import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as TestRouteImport } from './routes/test'
 import { Route as ZdjecieRouteImport } from './routes/zdjecie'
+import { Route as WynikIdRouteImport } from './routes/wynik.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const ZdjecieRoute = ZdjecieRouteImport.update({
   path: '/zdjecie',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WynikIdRoute = WynikIdRouteImport.update({
+  id: '/wynik/$id',
+  path: '/wynik/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/regulamin': typeof RegulaminRoute
   '/test': typeof TestRoute
   '/zdjecie': typeof ZdjecieRoute
+  '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/regulamin': typeof RegulaminRoute
   '/test': typeof TestRoute
   '/zdjecie': typeof ZdjecieRoute
+  '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/regulamin': typeof RegulaminRoute
   '/test': typeof TestRoute
   '/zdjecie': typeof ZdjecieRoute
+  '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/test'
     | '/zdjecie'
+    | '/wynik/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/test'
     | '/zdjecie'
+    | '/wynik/$id'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/test'
     | '/zdjecie'
+    | '/wynik/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   RegulaminRoute: typeof RegulaminRoute
   TestRoute: typeof TestRoute
   ZdjecieRoute: typeof ZdjecieRoute
+  WynikIdRoute: typeof WynikIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZdjecieRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wynik/$id': {
+      id: '/wynik/$id'
+      path: '/wynik/$id'
+      fullPath: '/wynik/$id'
+      preLoaderRoute: typeof WynikIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegulaminRoute: RegulaminRoute,
   TestRoute: TestRoute,
   ZdjecieRoute: ZdjecieRoute,
+  WynikIdRoute: WynikIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
