@@ -1,3 +1,3 @@
-- [ ] Build the Polish landing, quiz, selfie, result, and legal pages.
-- [ ] Add mock-only result and checkout calls, tracking placeholder, and cookie choice.
-- [ ] Verify desktop and mobile flows and preview diagnostics.
+- [x] Build the Polish landing, quiz, selfie, result, and legal pages.
+- [x] Add mock-only result and checkout calls, tracking placeholder, and cookie choice.
+- [x] Verify desktop and mobile flows and preview diagnostics.

@@ -5,6 +5,7 @@ export const pl = {
   back: "Wstecz",
   next: "Dalej",
   landing: {
+    heroAlt: "Kobieta trzymająca kolorowe próbki tkanin",
     eyebrow: "ANALIZA KOLORYSTYCZNA ONLINE",
     title: "Odkryj swoje kolory w 60 sekund",
     subtitle: "Przestań kupować ubrania, w których wyglądasz na zmęczoną.",

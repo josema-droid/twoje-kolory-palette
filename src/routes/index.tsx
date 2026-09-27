@@ -19,7 +19,7 @@ function Home() {
   const sample = pl.mock.palettes.spring.best;
   return <main>
     <section className="relative flex min-h-[610px] items-center overflow-hidden bg-muted md:min-h-[650px] lg:min-h-[680px]">
-      <img src={hero} alt="Kobieta trzymająca kolorowe próbki tkanin" width={1536} height={1024} className="absolute inset-0 h-full w-full object-cover object-[66%_center] max-md:opacity-35 md:object-center" />
+      <img src={hero} alt={t.heroAlt} width={1536} height={1024} className="absolute inset-0 h-full w-full object-cover object-[66%_center] max-md:opacity-35 md:object-center" />
       <div className="absolute inset-0 bg-background/55 md:bg-transparent" />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-20 md:px-10">
         <div className="max-w-[590px]"><p className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-primary"><span className="h-px w-8 bg-primary" />{t.eyebrow}</p><h1 className="font-display text-5xl leading-[1.08] font-normal text-foreground sm:text-6xl md:text-7xl lg:text-[5.3rem]">{t.title}</h1><p className="mt-7 max-w-[430px] text-lg leading-relaxed text-foreground/80 md:text-xl">{t.subtitle}</p><Button asChild size="lg" className="mt-9 h-14 rounded-full px-8 text-base shadow-lg md:h-16 md:px-10"><Link to="/test">{t.cta}<ArrowRight size={19} /></Link></Button><p className="mt-5 text-xs font-medium text-muted-foreground">{t.note}</p></div>
