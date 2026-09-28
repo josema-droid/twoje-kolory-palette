@@ -89,6 +89,7 @@ One-time setup in the Supabase dashboard:
    into "Confirm signup" and `supabase/templates/reset-password.html` into
    "Reset Password", with the subjects noted at the top of each file.
 5. **SQL Editor:** run each file in `supabase/migrations/` that hasn't been
-   applied yet, in order (0002 adds result ownership).
+   applied yet, in order (0002 adds result ownership, 0003 stops anyone
+   from listing all results).
 6. **Authentication → Rate Limits:** raise the email rate limit (the built-in
    sender allows only a couple of emails per hour; custom SMTP lifts that).

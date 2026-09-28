@@ -51,37 +51,47 @@ export async function analyzePhoto(quizAnswers: string[], photoFile: File): Prom
     : (quizAnswers[5] === pl.quiz.questions[5]?.answers[3] ? "winter" : "summer");
   const season = pl.mock.seasons[key];
   const palette = pl.mock.palettes[key];
-  const { data, error } = await supabase
-    .from("results")
-    .insert({
-      ...season,
-      best_colors: palette.best,
-      avoid_colors: palette.avoid,
-      best_neutrals: palette.neutrals,
-      confidence: photoFile.size < 30000 ? 0.48 : 0.87,
-      is_paid: false,
-    })
-    .select()
-    .single<ResultRow>();
-  if (error || !data) throw error ?? new Error("Failed to save result");
-  const result = fromRow(data);
+  // The id is generated here because anonymous visitors can't read rows back
+  // from the table (migration 0003); the result is then fetched via getResult.
+  const id = crypto.randomUUID();
+  const { error } = await supabase.from("results").insert({
+    id,
+    ...season,
+    best_colors: palette.best,
+    avoid_colors: palette.avoid,
+    best_neutrals: palette.neutrals,
+    confidence: photoFile.size < 30000 ? 0.48 : 0.87,
+    is_paid: false,
+  });
+  if (error) throw error;
+  const result = await getResult(id);
+  if (!result) throw new Error("Failed to save result");
   if (!result.userId) writeLocalResultIds([...readLocalResultIds(), result.id]);
   return result;
 }
 
+// PostgREST's "function not found" code. TEMPORARY fallback so this build
+// keeps working until migration 0003 is applied; remove once it is.
+const MISSING_FUNCTION = "PGRST202";
+
 export async function getResult(id: string): Promise<Result | null> {
-  const { data, error } = await supabase.from("results").select().eq("id", id).maybeSingle<ResultRow>();
+  const { data, error } = await supabase.rpc("get_result", { result_id: id }).maybeSingle<ResultRow>();
+  if (error?.code === MISSING_FUNCTION) {
+    const legacy = await supabase.from("results").select().eq("id", id).maybeSingle<ResultRow>();
+    if (legacy.error) throw legacy.error;
+    return legacy.data ? fromRow(legacy.data) : null;
+  }
   if (error) throw error;
   return data ? fromRow(data) : null;
 }
 
 export async function startCheckout(resultId: string): Promise<Result | null> {
-  const { data, error } = await supabase
-    .from("results")
-    .update({ is_paid: true })
-    .eq("id", resultId)
-    .select()
-    .maybeSingle<ResultRow>();
+  const { data, error } = await supabase.rpc("mark_result_paid", { result_id: resultId }).maybeSingle<ResultRow>();
+  if (error?.code === MISSING_FUNCTION) {
+    const legacy = await supabase.from("results").update({ is_paid: true }).eq("id", resultId).select().maybeSingle<ResultRow>();
+    if (legacy.error) throw legacy.error;
+    return legacy.data ? fromRow(legacy.data) : null;
+  }
   if (error) throw error;
   return data ? fromRow(data) : null;
 }
