@@ -10,17 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LogowanieRouteImport } from './routes/logowanie'
+import { Route as MojeWynikiRouteImport } from './routes/moje-wyniki'
+import { Route as NiePamietamHaslaRouteImport } from './routes/nie-pamietam-hasla'
+import { Route as NoweHasloRouteImport } from './routes/nowe-haslo'
 import { Route as OdstapienieOdUmowyRouteImport } from './routes/odstapienie-od-umowy'
 import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
 import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
 import { Route as RegulaminRouteImport } from './routes/regulamin'
+import { Route as RejestracjaRouteImport } from './routes/rejestracja'
 import { Route as TestRouteImport } from './routes/test'
+import { Route as WeryfikacjaRouteImport } from './routes/weryfikacja'
 import { Route as ZdjecieRouteImport } from './routes/zdjecie'
 import { Route as WynikIdRouteImport } from './routes/wynik.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogowanieRoute = LogowanieRouteImport.update({
+  id: '/logowanie',
+  path: '/logowanie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MojeWynikiRoute = MojeWynikiRouteImport.update({
+  id: '/moje-wyniki',
+  path: '/moje-wyniki',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NiePamietamHaslaRoute = NiePamietamHaslaRouteImport.update({
+  id: '/nie-pamietam-hasla',
+  path: '/nie-pamietam-hasla',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoweHasloRoute = NoweHasloRouteImport.update({
+  id: '/nowe-haslo',
+  path: '/nowe-haslo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OdstapienieOdUmowyRoute = OdstapienieOdUmowyRouteImport.update({
@@ -43,9 +69,19 @@ const RegulaminRoute = RegulaminRouteImport.update({
   path: '/regulamin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RejestracjaRoute = RejestracjaRouteImport.update({
+  id: '/rejestracja',
+  path: '/rejestracja',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TestRoute = TestRouteImport.update({
   id: '/test',
   path: '/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WeryfikacjaRoute = WeryfikacjaRouteImport.update({
+  id: '/weryfikacja',
+  path: '/weryfikacja',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ZdjecieRoute = ZdjecieRouteImport.update({
@@ -61,32 +97,50 @@ const WynikIdRoute = WynikIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/logowanie': typeof LogowanieRoute
+  '/moje-wyniki': typeof MojeWynikiRoute
+  '/nie-pamietam-hasla': typeof NiePamietamHaslaRoute
+  '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
+  '/rejestracja': typeof RejestracjaRoute
   '/test': typeof TestRoute
+  '/weryfikacja': typeof WeryfikacjaRoute
   '/zdjecie': typeof ZdjecieRoute
   '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/logowanie': typeof LogowanieRoute
+  '/moje-wyniki': typeof MojeWynikiRoute
+  '/nie-pamietam-hasla': typeof NiePamietamHaslaRoute
+  '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
+  '/rejestracja': typeof RejestracjaRoute
   '/test': typeof TestRoute
+  '/weryfikacja': typeof WeryfikacjaRoute
   '/zdjecie': typeof ZdjecieRoute
   '/wynik/$id': typeof WynikIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/logowanie': typeof LogowanieRoute
+  '/moje-wyniki': typeof MojeWynikiRoute
+  '/nie-pamietam-hasla': typeof NiePamietamHaslaRoute
+  '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
+  '/rejestracja': typeof RejestracjaRoute
   '/test': typeof TestRoute
+  '/weryfikacja': typeof WeryfikacjaRoute
   '/zdjecie': typeof ZdjecieRoute
   '/wynik/$id': typeof WynikIdRoute
 }
@@ -94,42 +148,66 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/logowanie'
+    | '/moje-wyniki'
+    | '/nie-pamietam-hasla'
+    | '/nowe-haslo'
     | '/odstapienie-od-umowy'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
+    | '/rejestracja'
     | '/test'
+    | '/weryfikacja'
     | '/zdjecie'
     | '/wynik/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/logowanie'
+    | '/moje-wyniki'
+    | '/nie-pamietam-hasla'
+    | '/nowe-haslo'
     | '/odstapienie-od-umowy'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
+    | '/rejestracja'
     | '/test'
+    | '/weryfikacja'
     | '/zdjecie'
     | '/wynik/$id'
   id:
     | '__root__'
     | '/'
+    | '/logowanie'
+    | '/moje-wyniki'
+    | '/nie-pamietam-hasla'
+    | '/nowe-haslo'
     | '/odstapienie-od-umowy'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
+    | '/rejestracja'
     | '/test'
+    | '/weryfikacja'
     | '/zdjecie'
     | '/wynik/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LogowanieRoute: typeof LogowanieRoute
+  MojeWynikiRoute: typeof MojeWynikiRoute
+  NiePamietamHaslaRoute: typeof NiePamietamHaslaRoute
+  NoweHasloRoute: typeof NoweHasloRoute
   OdstapienieOdUmowyRoute: typeof OdstapienieOdUmowyRoute
   PolitykaCookiesRoute: typeof PolitykaCookiesRoute
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
+  RejestracjaRoute: typeof RejestracjaRoute
   TestRoute: typeof TestRoute
+  WeryfikacjaRoute: typeof WeryfikacjaRoute
   ZdjecieRoute: typeof ZdjecieRoute
   WynikIdRoute: typeof WynikIdRoute
 }
@@ -141,6 +219,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logowanie': {
+      id: '/logowanie'
+      path: '/logowanie'
+      fullPath: '/logowanie'
+      preLoaderRoute: typeof LogowanieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moje-wyniki': {
+      id: '/moje-wyniki'
+      path: '/moje-wyniki'
+      fullPath: '/moje-wyniki'
+      preLoaderRoute: typeof MojeWynikiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nie-pamietam-hasla': {
+      id: '/nie-pamietam-hasla'
+      path: '/nie-pamietam-hasla'
+      fullPath: '/nie-pamietam-hasla'
+      preLoaderRoute: typeof NiePamietamHaslaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nowe-haslo': {
+      id: '/nowe-haslo'
+      path: '/nowe-haslo'
+      fullPath: '/nowe-haslo'
+      preLoaderRoute: typeof NoweHasloRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/odstapienie-od-umowy': {
@@ -171,11 +277,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegulaminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rejestracja': {
+      id: '/rejestracja'
+      path: '/rejestracja'
+      fullPath: '/rejestracja'
+      preLoaderRoute: typeof RejestracjaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/test': {
       id: '/test'
       path: '/test'
       fullPath: '/test'
       preLoaderRoute: typeof TestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/weryfikacja': {
+      id: '/weryfikacja'
+      path: '/weryfikacja'
+      fullPath: '/weryfikacja'
+      preLoaderRoute: typeof WeryfikacjaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/zdjecie': {
@@ -197,11 +317,17 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LogowanieRoute: LogowanieRoute,
+  MojeWynikiRoute: MojeWynikiRoute,
+  NiePamietamHaslaRoute: NiePamietamHaslaRoute,
+  NoweHasloRoute: NoweHasloRoute,
   OdstapienieOdUmowyRoute: OdstapienieOdUmowyRoute,
   PolitykaCookiesRoute: PolitykaCookiesRoute,
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
+  RejestracjaRoute: RejestracjaRoute,
   TestRoute: TestRoute,
+  WeryfikacjaRoute: WeryfikacjaRoute,
   ZdjecieRoute: ZdjecieRoute,
   WynikIdRoute: WynikIdRoute,
 }

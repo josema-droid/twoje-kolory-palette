@@ -11,4 +11,5 @@ export type Result = {
   best_neutrals: Color[];
   confidence: number;
   isPaid: boolean;
+  userId: string | null;
 };

@@ -1,13 +1,22 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, LogOut, Palette, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pl } from "@/content/pl";
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { claimLocalResults, signOut } from "@/lib/api";
 import { trackEvent } from "@/lib/tracking";
+
+const AUTH_PATHS = ["/logowanie", "/rejestracja", "/weryfikacja", "/nie-pamietam-hasla", "/nowe-haslo"];
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [cookieChoice, setCookieChoice] = useState<string | null>(null);
+  const user = useAuthUser();
+  const onAuthPage = AUTH_PATHS.includes(pathname);
+  const userId = user?.id;
+  // Attach results made on this device before logging in to the account.
+  useEffect(() => { if (userId) void claimLocalResults(); }, [userId]);
   useEffect(() => {
     trackEvent("PageView", { path: pathname });
   }, [pathname]);
@@ -21,7 +30,12 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     <header className="relative z-20 border-b border-border/70 bg-background/95">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 md:h-21 md:px-10">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold text-foreground md:text-2xl"><span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><Sparkles size={17} strokeWidth={1.6} /></span>{pl.brand}<span className="text-primary">.</span></Link>
-        <Button asChild variant="outline" className="h-10 rounded-full border-primary/25 px-5 text-xs font-semibold text-primary hover:border-primary hover:bg-secondary md:h-11 md:text-sm"><Link to="/test">{pl.navStart}<ArrowRight size={15} /></Link></Button>
+        <div className="flex items-center gap-1 md:gap-2">
+          {user === null && !onAuthPage && <Button asChild variant="ghost" className="h-10 rounded-full px-3 text-xs font-semibold md:h-11 md:px-4 md:text-sm"><Link to="/logowanie" search={pathname === "/" ? {} : { redirect: pathname }} aria-label={pl.auth.navLogin}><UserRound size={17} /><span className="hidden sm:inline">{pl.auth.navLogin}</span></Link></Button>}
+          {user && <Button asChild variant="ghost" aria-label={pl.auth.navMyResults} className="h-10 rounded-full px-3 text-xs font-semibold md:h-11 md:px-4 md:text-sm"><Link to="/moje-wyniki"><Palette size={17} /><span className="hidden sm:inline">{pl.auth.navMyResults}</span></Link></Button>}
+          {user && <Button variant="ghost" title={user.email} aria-label={pl.auth.navLogout} className="h-10 rounded-full px-3 text-xs font-semibold md:h-11 md:px-4 md:text-sm" onClick={() => void signOut()}><LogOut size={17} /><span className="hidden sm:inline">{pl.auth.navLogout}</span></Button>}
+          <Button asChild variant="outline" className="h-10 rounded-full border-primary/25 px-5 text-xs font-semibold text-primary hover:border-primary hover:bg-secondary md:h-11 md:text-sm"><Link to="/test">{pl.navStart}<ArrowRight size={15} /></Link></Button>
+        </div>
       </div>
     </header>
     {children}

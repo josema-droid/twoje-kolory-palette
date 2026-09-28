@@ -63,3 +63,32 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Accounts & email (Supabase Auth + Resend)
+
+Users sign up with email + password at `/rejestracja`, then must enter a 6-digit
+code emailed to them at `/weryfikacja` before they can log in at `/logowanie`.
+"Forgot password" (`/nie-pamietam-hasla`) emails a code to the same screen,
+then `/nowe-haslo` sets the new password. Logged-in users see their saved
+results at `/moje-wyniki`; results made before logging in on the same device
+are attached to the account on login (`claim_results` in migration 0002).
+The code (not a magic link) is deliberate: traffic comes from Instagram/TikTok
+in-app browsers, where an email link would open in a different browser.
+
+One-time setup in the Supabase dashboard:
+
+1. **Resend:** verify your sending domain in Resend and create an API key.
+2. **Authentication → Emails → SMTP Settings:** enable custom SMTP with host
+   `smtp.resend.com`, port `465`, username `resend`, password = the Resend API
+   key, and a sender on the verified domain (e.g. `hello@twojekolory.pl`).
+   (Or use Resend's Supabase integration, which fills these in for you.)
+3. **Authentication → Sign In / Providers → Email:** keep "Confirm email" ON,
+   set "Email OTP Length" to `6` (must match `CODE_LENGTH` in
+   `src/routes/weryfikacja.tsx`), and set the minimum password length to `8`.
+4. **Authentication → Emails:** paste `supabase/templates/confirm-signup.html`
+   into "Confirm signup" and `supabase/templates/reset-password.html` into
+   "Reset Password", with the subjects noted at the top of each file.
+5. **SQL Editor:** run each file in `supabase/migrations/` that hasn't been
+   applied yet, in order (0002 adds result ownership).
+6. **Authentication → Rate Limits:** raise the email rate limit (the built-in
+   sender allows only a couple of emails per hour; custom SMTP lifts that).
