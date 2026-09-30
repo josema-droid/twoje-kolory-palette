@@ -1,13 +1,19 @@
 -- Link color analysis results to user accounts (Supabase Auth).
 -- A result created while logged in is owned from the start; one created
 -- anonymously is claimed after login via claim_results() below.
+--
+-- Written defensively (if not exists / or replace) since a first attempt at
+-- running this in the Supabase SQL Editor can partially apply before failing
+-- on a later statement, and simply re-running the original script then fails
+-- on "column already exists".
 alter table public.results
-  add column user_id uuid references auth.users (id) on delete set null default auth.uid();
+  add column if not exists user_id uuid references auth.users (id) on delete set null default auth.uid();
 
-create index results_user_id_idx on public.results (user_id);
+create index if not exists results_user_id_idx on public.results (user_id);
 
 -- Inserts may only be anonymous or owned by the caller, never by someone else.
-drop policy "anyone can create a result" on public.results;
+drop policy if exists "anyone can create a result" on public.results;
+drop policy if exists "anyone can create an anonymous or own result" on public.results;
 create policy "anyone can create an anonymous or own result"
   on public.results for insert
   with check (user_id is null or user_id = auth.uid());
@@ -19,7 +25,7 @@ grant update (is_paid) on public.results to anon, authenticated;
 
 -- Attach unowned results (ids remembered by the browser that created them)
 -- to the logged-in user. Already-owned rows are left untouched.
-create function public.claim_results(result_ids uuid[])
+create or replace function public.claim_results(result_ids uuid[])
 returns setof uuid
 language sql
 security definer
