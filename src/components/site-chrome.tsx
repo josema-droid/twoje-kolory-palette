@@ -41,14 +41,23 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     {children}
     <footer className="border-t border-border bg-secondary/45">
       <div className="mx-auto max-w-7xl px-5 py-10 md:px-10 md:py-14">
-        <div className="flex flex-col justify-between gap-8 md:flex-row">
-          <div><Link to="/" className="font-display text-xl font-semibold">{pl.brand}<span className="text-primary">.</span></Link><p className="mt-2 text-sm text-muted-foreground">{pl.footer.note}</p><p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"><Sparkles size={14} />{pl.footer.trust}</p></div>
-          <nav className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-muted-foreground md:gap-x-12">
+        <div className="grid gap-10 md:grid-cols-3 md:gap-8">
+          <div>
+            <Link to="/" className="font-display text-xl font-semibold">{pl.brand}<span className="text-primary">.</span></Link>
+            <p className="mt-2 text-sm text-muted-foreground">{pl.footer.note}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{pl.footer.tagline}</p>
+          </div>
+          <nav className="flex flex-col gap-3 text-sm text-muted-foreground">
             <Link to="/regulamin" className="hover:text-primary">{pl.legal.terms.label}</Link>
             <Link to="/polityka-prywatnosci" className="hover:text-primary">{pl.legal.privacy.label}</Link>
             <Link to="/polityka-cookies" className="hover:text-primary">{pl.legal.cookies.label}</Link>
             <Link to="/odstapienie-od-umowy" className="hover:text-primary">{pl.legal.withdrawal.label}</Link>
           </nav>
+          <div className="text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">{pl.footer.contactLabel}</p>
+            <a href={`mailto:${pl.footer.contactEmail}`} className="mt-1 inline-block hover:text-primary">{pl.footer.contactEmail}</a>
+            <p className="mt-5 flex items-center gap-2 text-xs"><Sparkles size={13} />{pl.footer.techNote}</p>
+          </div>
         </div>
         <p className="mt-10 border-t border-border pt-5 text-xs text-muted-foreground">{pl.footer.copyright}</p>
       </div>

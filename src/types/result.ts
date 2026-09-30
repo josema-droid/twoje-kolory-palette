@@ -1,15 +1,10 @@
-export type Color = { name: string; hex: string };
+import type { Answers } from "@/content/funnel";
+import type { ColorReport } from "@/content/engine";
 
 export type Result = {
   id: string;
-  season_pl: string;
-  season_en: string;
-  family: "Wiosna" | "Lato" | "Jesień" | "Zima";
-  description: string;
-  best_colors: Color[];
-  avoid_colors: Color[];
-  best_neutrals: Color[];
-  confidence: number;
   isPaid: boolean;
   userId: string | null;
+  answers: Answers;
+  report: ColorReport;
 };

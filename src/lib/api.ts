@@ -1,25 +1,20 @@
-import { pl } from "@/content/pl";
 import type { AuthError, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { buildColorReport, type ColorReport, type PhotoAnalysis } from "@/content/engine";
+import type { Answers } from "@/content/funnel";
 import type { Result } from "@/types/result";
 
 type ResultRow = {
   id: string;
-  season_pl: string;
-  season_en: string;
-  family: Result["family"];
-  description: string;
-  best_colors: Result["best_colors"];
-  avoid_colors: Result["avoid_colors"];
-  best_neutrals: Result["best_neutrals"];
-  confidence: number;
   is_paid: boolean;
+  answers: Answers;
+  report: ColorReport;
   // Missing until migration 0002 is applied.
   user_id?: string | null;
   created_at: string;
 };
 
-function fromRow({ is_paid, user_id, created_at, ...rest }: ResultRow): Result {
+function fromRow({ is_paid, user_id, created_at: _created_at, ...rest }: ResultRow): Result {
   return { ...rest, isPaid: is_paid, userId: user_id ?? null };
 }
 
@@ -45,24 +40,38 @@ function writeLocalResultIds(ids: string[]): void {
   }
 }
 
-export async function analyzePhoto(quizAnswers: string[], photoFile: File): Promise<Result> {
-  const key = quizAnswers[3] === pl.quiz.questions[3]?.answers[0]
-    ? (quizAnswers[5] === pl.quiz.questions[5]?.answers[2] ? "autumn" : "spring")
-    : (quizAnswers[5] === pl.quiz.questions[5]?.answers[3] ? "winter" : "summer");
-  const season = pl.mock.seasons[key];
-  const palette = pl.mock.palettes[key];
+const TEMPERATURES: PhotoAnalysis["temperature"][] = ["chłodna", "neutralno-chłodna", "neutralna", "neutralno-ciepła", "ciepła"];
+const DEPTHS: PhotoAnalysis["depth"][] = ["jasna", "średnia", "głęboka"];
+const SATURATIONS: PhotoAnalysis["saturation"][] = ["miękka", "umiarkowana", "czysta"];
+const CONTRASTS: PhotoAnalysis["contrast"][] = ["niski", "średni", "wysoki"];
+
+function seedFrom(text: string): number {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  return hash;
+}
+
+// PLACEHOLDER: no real photo-analysis model is wired up yet (see
+// PHOTO_ANALYZER_CONTRACT — an external analyzer should return these same
+// four fields from the actual photo). This derives a varied-but-fake profile
+// so the quiz -> report flow can be tested end to end in the meantime.
+function demoPhotoAnalysis(answers: Answers, photoFile: File): PhotoAnalysis {
+  const seed = seedFrom(JSON.stringify(answers) + photoFile.name + photoFile.size);
+  return {
+    temperature: TEMPERATURES[seed % TEMPERATURES.length]!,
+    depth: DEPTHS[(seed >> 3) % DEPTHS.length]!,
+    saturation: SATURATIONS[(seed >> 6) % SATURATIONS.length]!,
+    contrast: CONTRASTS[(seed >> 9) % CONTRASTS.length]!,
+  };
+}
+
+export async function analyzePhoto(answers: Answers, photoFile: File): Promise<Result> {
+  const photo = demoPhotoAnalysis(answers, photoFile);
+  const report = buildColorReport(photo, answers);
   // The id is generated here because anonymous visitors can't read rows back
   // from the table (migration 0003); the result is then fetched via getResult.
   const id = crypto.randomUUID();
-  const { error } = await supabase.from("results").insert({
-    id,
-    ...season,
-    best_colors: palette.best,
-    avoid_colors: palette.avoid,
-    best_neutrals: palette.neutrals,
-    confidence: photoFile.size < 30000 ? 0.48 : 0.87,
-    is_paid: false,
-  });
+  const { error } = await supabase.from("results").insert({ id, answers, report, is_paid: false });
   if (error) throw error;
   const result = await getResult(id);
   if (!result) throw new Error("Failed to save result");
@@ -77,7 +86,7 @@ const MISSING_FUNCTION = "PGRST202";
 export async function getResult(id: string): Promise<Result | null> {
   const { data, error } = await supabase.rpc("get_result", { result_id: id }).maybeSingle<ResultRow>();
   if (error?.code === MISSING_FUNCTION) {
-    const legacy = await supabase.from("results").select().eq("id", id).maybeSingle<ResultRow>();
+    const legacy = await supabase.from("results").select("id, is_paid, answers, report").eq("id", id).maybeSingle<ResultRow>();
     if (legacy.error) throw legacy.error;
     return legacy.data ? fromRow(legacy.data) : null;
   }
@@ -85,18 +94,7 @@ export async function getResult(id: string): Promise<Result | null> {
   return data ? fromRow(data) : null;
 }
 
-export async function startCheckout(resultId: string): Promise<Result | null> {
-  const { data, error } = await supabase.rpc("mark_result_paid", { result_id: resultId }).maybeSingle<ResultRow>();
-  if (error?.code === MISSING_FUNCTION) {
-    const legacy = await supabase.from("results").update({ is_paid: true }).eq("id", resultId).select().maybeSingle<ResultRow>();
-    if (legacy.error) throw legacy.error;
-    return legacy.data ? fromRow(legacy.data) : null;
-  }
-  if (error) throw error;
-  return data ? fromRow(data) : null;
-}
-
-export type ResultSummary = Pick<Result, "id" | "family" | "season_pl" | "isPaid"> & { createdAt: string };
+export type ResultSummary = Pick<Result, "id" | "isPaid"> & { createdAt: string };
 
 export async function listMyResults(): Promise<ResultSummary[]> {
   const { data: session } = await supabase.auth.getSession();
@@ -104,12 +102,12 @@ export async function listMyResults(): Promise<ResultSummary[]> {
   if (!userId) return [];
   const { data, error } = await supabase
     .from("results")
-    .select("id, family, season_pl, is_paid, created_at")
+    .select("id, is_paid, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .returns<Pick<ResultRow, "id" | "family" | "season_pl" | "is_paid" | "created_at">[]>();
+    .returns<Pick<ResultRow, "id" | "is_paid" | "created_at">[]>();
   if (error) throw error;
-  return data.map((row) => ({ id: row.id, family: row.family, season_pl: row.season_pl, isPaid: row.is_paid, createdAt: row.created_at }));
+  return data.map((row) => ({ id: row.id, isPaid: row.is_paid, createdAt: row.created_at }));
 }
 
 // Attaches results created on this device before logging in to the current

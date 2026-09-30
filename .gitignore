@@ -23,6 +23,12 @@ dist-ssr
 # Supabase CLI
 supabase/.temp/
 
+# Local reference material, not app code
+/Copy adaptation/
+/COPY COLOR PALETTE.txt
+/twoje-kolory-full-page.png
+/Juan Migration/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

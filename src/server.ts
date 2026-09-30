@@ -44,8 +44,55 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// Stripe posts here directly (not through the app's router/server functions),
+// so it's handled as a plain HTTP route ahead of the TanStack Start handler.
+async function handleStripeWebhook(request: Request): Promise<Response> {
+  const signature = request.headers.get("stripe-signature");
+  if (!signature) return new Response("Missing stripe-signature header", { status: 400 });
+
+  const rawBody = await request.text();
+  const Stripe = (await import("stripe")).default;
+  const stripe = new Stripe(process.env["STRIPE_SECRET_KEY"]!);
+
+  let event: import("stripe").Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, signature, process.env["STRIPE_WEBHOOK_SECRET"]!);
+  } catch (error) {
+    console.error("Stripe webhook signature verification failed", error);
+    return new Response("Invalid signature", { status: 400 });
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const resultId = session.metadata?.["resultId"];
+    if (resultId) {
+      const { createClient } = await import("@supabase/supabase-js");
+      const admin = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!);
+      const { error } = await admin.from("results").update({ is_paid: true }).eq("id", resultId);
+      if (error) console.error("Failed to mark result as paid", resultId, error);
+    } else {
+      console.error("Stripe checkout.session.completed event missing resultId metadata");
+    }
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+    if (request.method === "POST" && url.pathname === "/api/stripe-webhook") {
+      try {
+        return await handleStripeWebhook(request);
+      } catch (error) {
+        console.error(error);
+        return new Response("Webhook handler error", { status: 500 });
+      }
+    }
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
