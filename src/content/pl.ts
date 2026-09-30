@@ -204,6 +204,7 @@ export const pl = {
     error: "Nie udało się wczytać wyników. Odśwież stronę i spróbuj ponownie.",
     empty: "Nie masz jeszcze żadnej analizy na swoim koncie.",
     emptyCta: "Zacznij test",
+    resultLabel: "Analiza kolorystyczna",
     paid: "Pełny wynik",
     locked: "Do odblokowania",
     open: "Zobacz wynik",
