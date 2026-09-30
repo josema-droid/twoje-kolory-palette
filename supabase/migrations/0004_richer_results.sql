@@ -8,5 +8,5 @@
 -- in place, unused, rather than dropped — no real rows exist yet, so
 -- nothing is lost, and this avoids a destructive schema change.
 alter table public.results
-  add column answers jsonb not null default '{}'::jsonb,
-  add column report jsonb not null default '{}'::jsonb;
+  add column if not exists answers jsonb not null default '{}'::jsonb,
+  add column if not exists report jsonb not null default '{}'::jsonb;
