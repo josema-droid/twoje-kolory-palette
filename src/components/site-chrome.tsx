@@ -1,11 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, LogOut, Palette, Sparkles, UserRound } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { claimLocalResults, signOut } from "@/lib/api";
 import { trackEvent } from "@/lib/tracking";
+import logoMark from "@/assets/landing/logo-mark.png";
 
 const AUTH_PATHS = ["/logowanie", "/rejestracja", "/weryfikacja", "/nie-pamietam-hasla", "/nowe-haslo"];
 
@@ -17,8 +18,10 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const userId = user?.id;
   // Attach results made on this device before logging in to the account.
   useEffect(() => { if (userId) void claimLocalResults(); }, [userId]);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     trackEvent("PageView", { path: pathname });
+    setMenuOpen(false); // close the mobile menu after navigating
   }, [pathname]);
   useEffect(() => { setCookieChoice(localStorage.getItem("twoje-kolory-cookies")); }, []);
   const choose = (value: string) => {
@@ -27,18 +30,31 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   };
 
   return <div className="min-h-screen bg-background text-foreground">
-    <header className="relative z-20 border-b border-border/70 bg-background/95">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 md:h-21 md:px-10">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold text-foreground md:text-2xl"><span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground"><Sparkles size={17} strokeWidth={1.6} /></span>{pl.brand}<span className="text-primary">.</span></Link>
-        <div className="flex items-center gap-1 md:gap-2">
-          {user === null && !onAuthPage && <Button asChild variant="ghost" className="h-10 rounded-full px-3 text-xs font-semibold md:h-11 md:px-4 md:text-sm"><Link to="/logowanie" search={pathname === "/" ? {} : { redirect: pathname }} aria-label={pl.auth.navLogin}><UserRound size={17} /><span className="hidden sm:inline">{pl.auth.navLogin}</span></Link></Button>}
-          {user && <Button asChild variant="ghost" aria-label={pl.auth.navMyResults} className="h-10 rounded-full px-3 text-xs font-semibold md:h-11 md:px-4 md:text-sm"><Link to="/moje-wyniki"><Palette size={17} /><span className="hidden sm:inline">{pl.auth.navMyResults}</span></Link></Button>}
-          {user && <Button variant="ghost" title={user.email} aria-label={pl.auth.navLogout} className="h-10 rounded-full px-3 text-xs font-semibold md:h-11 md:px-4 md:text-sm" onClick={() => void signOut()}><LogOut size={17} /><span className="hidden sm:inline">{pl.auth.navLogout}</span></Button>}
-          <Button asChild variant="outline" className="h-10 rounded-full border-primary/25 px-5 text-xs font-semibold text-primary hover:border-primary hover:bg-secondary md:h-11 md:text-sm"><Link to="/test">{pl.navStart}<ArrowRight size={15} /></Link></Button>
-        </div>
+    <a className="skip-link" href="#main">{pl.skipToContent}</a>
+    <header className="site-header">
+      <div className="site-header__inner">
+        <Link to="/" className="logo" aria-label={pl.navHome}>
+          <img className="logo__mark" src={logoMark} width={264} height={324} alt="" />
+          <span className="logo__text">Twój<br />Color</span>
+        </Link>
+
+        <button type="button" className="nav-toggle" aria-controls="site-nav" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
+          <span className="sr-only">{pl.navMenu}</span>
+          <span className="nav-toggle__bar" aria-hidden="true" />
+        </button>
+
+        <nav className={`site-nav${menuOpen ? " is-open" : ""}`} id="site-nav" aria-label="Główna nawigacja">
+          <ul className="site-nav__list">
+            <li><a className="site-nav__link" href="/#faq" onClick={() => setMenuOpen(false)}>{pl.navFaq}</a></li>
+            {user === null && !onAuthPage && <li><Link className="site-nav__link" to="/logowanie" search={pathname === "/" ? {} : { redirect: pathname }}>{pl.auth.navLogin}</Link></li>}
+            {user && <li><Link className="site-nav__link" to="/moje-wyniki">{pl.auth.navMyResults}</Link></li>}
+            {user && <li><button type="button" className="site-nav__link" title={user.email} onClick={() => void signOut()}>{pl.auth.navLogout}</button></li>}
+          </ul>
+          <Link className="lp-btn lp-btn--light" to="/test">{pl.navStart} <span className="lp-btn__arrow" aria-hidden="true">➜</span></Link>
+        </nav>
       </div>
     </header>
-    {children}
+    <div id="main" tabIndex={-1} className="outline-none">{children}</div>
     <footer className="border-t border-border bg-secondary/45">
       <div className="mx-auto max-w-7xl px-5 py-10 md:px-10 md:py-14">
         <div className="grid gap-10 md:grid-cols-3 md:gap-8">
