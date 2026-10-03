@@ -1,4 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage } from "@/components/legal-page";
 import { pl } from "@/content/pl";
-export const Route = createFileRoute("/polityka-cookies")({ head: () => ({ meta: [{ title: "Polityka cookies — Twój Color" }, { name: "description", content: "Polityka cookies serwisu Twój Color." }, { property: "og:title", content: "Polityka cookies — Twój Color" }, { property: "og:description", content: "Polityka cookies serwisu Twój Color." }] }), component: () => <LegalPage content={pl.legal.cookies} /> });
+import { breadcrumbSchema, homeCrumb, seo } from "@/lib/seo";
+
+export const Route = createFileRoute("/polityka-cookies")({
+  head: () =>
+    seo({
+      title: "Pliki cookies w serwisie",
+      description: "Informacje o plikach cookies używanych w serwisie Twój Color i o tym, jak zarządzać zgodą.",
+      path: "/polityka-cookies",
+      schema: [breadcrumbSchema([homeCrumb, { name: pl.legal.cookies.title, path: "/polityka-cookies" }])],
+    }),
+  component: () => <LegalPage content={pl.legal.cookies} path="/polityka-cookies" />,
+});

@@ -1,19 +1,19 @@
 import { pl } from "@/content/pl";
 import { CenterHead } from "./shared";
-import compareRandom from "@/assets/landing/compare-random.webp";
-import compareHarmony from "@/assets/landing/compare-harmony.webp";
-import fabricGrey from "@/assets/landing/fabric-grey.webp";
-import fabricPlum from "@/assets/landing/fabric-plum.webp";
-import fabricRose from "@/assets/landing/fabric-rose.webp";
-import fabricIvory from "@/assets/landing/fabric-ivory.webp";
-import fabricCoral from "@/assets/landing/fabric-coral.webp";
-import fabricTeal from "@/assets/landing/fabric-teal.webp";
+import compareRandom from "@/assets/landing/szal-w-niedopasowanym-kolorze.webp";
+import compareHarmony from "@/assets/landing/szal-w-dopasowanym-kolorze.webp";
+import fabricGrey from "@/assets/landing/tkanina-grafit.webp";
+import fabricPlum from "@/assets/landing/tkanina-sliwka.webp";
+import fabricRose from "@/assets/landing/tkanina-chlodny-roz.webp";
+import fabricIvory from "@/assets/landing/tkanina-ecru.webp";
+import fabricCoral from "@/assets/landing/tkanina-koral.webp";
+import fabricTeal from "@/assets/landing/tkanina-morska-zielen.webp";
 
 const t = pl.landing.compare;
 
 const cards = [
-  { ...t.bad, photo: compareRandom, fabrics: [fabricGrey, fabricPlum, fabricRose], good: false },
-  { ...t.good, photo: compareHarmony, fabrics: [fabricIvory, fabricCoral, fabricTeal], good: true },
+  { ...t.bad, photo: compareRandom, fabricImages: [fabricGrey, fabricPlum, fabricRose], good: false },
+  { ...t.good, photo: compareHarmony, fabricImages: [fabricIvory, fabricCoral, fabricTeal], good: true },
 ];
 
 export function CompareSection() {
@@ -29,7 +29,7 @@ export function CompareSection() {
               <div className="compare-card__media">
                 <img src={card.photo} width={1100} height={825} alt={card.alt} loading="lazy" decoding="async" />
                 <ul className="fabrics" aria-label={card.fabricsLabel}>
-                  {card.fabrics.map((src) => <li key={src}><img src={src} width={160} height={160} alt="" loading="lazy" /></li>)}
+                  {card.fabricImages.map((src, i) => <li key={src}><img src={src} width={160} height={160} alt={card.fabrics[i]} loading="lazy" /></li>)}
                 </ul>
               </div>
               <ul className={`pros-cons ${card.good ? "pros-cons--check" : "pros-cons--minus"}`}>

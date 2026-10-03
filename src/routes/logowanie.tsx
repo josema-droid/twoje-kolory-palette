@@ -7,11 +7,12 @@ import { AuthShell, Field, FormMessage, PasswordInput, authErrorMessage, fieldCl
 import { pl } from "@/content/pl";
 import { AuthFailure, sendEmailCode, signIn } from "@/lib/api";
 import { safeRedirect } from "@/lib/utils";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/logowanie")({
   // Always return the key: omitting it would let the raw (unsafe) value through from the root route.
   validateSearch: (search: Record<string, unknown>): { redirect?: string | undefined } => ({ redirect: safeRedirect(search["redirect"]) }),
-  head: () => ({ meta: [{ title: pl.auth.login.metaTitle }, { name: "robots", content: "noindex" }] }),
+  head: () => seo({ title: "Logowanie do konta", description: "Zaloguj się, aby zobaczyć swoje zapisane analizy kolorystyczne i palety.", path: "/logowanie", noindex: true }),
   component: LoginPage,
 });
 

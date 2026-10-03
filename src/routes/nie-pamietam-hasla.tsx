@@ -7,10 +7,11 @@ import { AuthShell, Field, FormMessage, authErrorMessage, fieldClass } from "@/c
 import { pl } from "@/content/pl";
 import { sendEmailCode } from "@/lib/api";
 import { safeRedirect } from "@/lib/utils";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/nie-pamietam-hasla")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string | undefined } => ({ redirect: safeRedirect(search["redirect"]) }),
-  head: () => ({ meta: [{ title: pl.auth.forgot.metaTitle }, { name: "robots", content: "noindex" }] }),
+  head: () => seo({ title: "Resetowanie hasła", description: "Podaj adres e-mail, a wyślemy Ci kod do ustawienia nowego hasła.", path: "/nie-pamietam-hasla", noindex: true }),
   component: ForgotPasswordPage,
 });
 

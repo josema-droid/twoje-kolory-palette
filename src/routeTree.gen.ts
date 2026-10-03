@@ -10,23 +10,33 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as LogowanieRouteImport } from './routes/logowanie'
 import { Route as MojeWynikiRouteImport } from './routes/moje-wyniki'
 import { Route as NiePamietamHaslaRouteImport } from './routes/nie-pamietam-hasla'
 import { Route as NoweHasloRouteImport } from './routes/nowe-haslo'
 import { Route as OdstapienieOdUmowyRouteImport } from './routes/odstapienie-od-umowy'
+import { Route as OdstapienieUmowyRouteImport } from './routes/odstapienie-umowy'
 import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
 import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
 import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as RejestracjaRouteImport } from './routes/rejestracja'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TestRouteImport } from './routes/test'
 import { Route as WeryfikacjaRouteImport } from './routes/weryfikacja'
 import { Route as ZdjecieRouteImport } from './routes/zdjecie'
+import { Route as TypyUrodyIndexRouteImport } from './routes/typy-urody/index'
+import { Route as TypyUrodySlugRouteImport } from './routes/typy-urody/$slug'
 import { Route as WynikIdRouteImport } from './routes/wynik.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LogowanieRoute = LogowanieRouteImport.update({
@@ -54,6 +64,11 @@ const OdstapienieOdUmowyRoute = OdstapienieOdUmowyRouteImport.update({
   path: '/odstapienie-od-umowy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OdstapienieUmowyRoute = OdstapienieUmowyRouteImport.update({
+  id: '/odstapienie-umowy',
+  path: '/odstapienie-umowy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PolitykaCookiesRoute = PolitykaCookiesRouteImport.update({
   id: '/polityka-cookies',
   path: '/polityka-cookies',
@@ -74,6 +89,11 @@ const RejestracjaRoute = RejestracjaRouteImport.update({
   path: '/rejestracja',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TestRoute = TestRouteImport.update({
   id: '/test',
   path: '/test',
@@ -89,6 +109,16 @@ const ZdjecieRoute = ZdjecieRouteImport.update({
   path: '/zdjecie',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TypyUrodyIndexRoute = TypyUrodyIndexRouteImport.update({
+  id: '/typy-urody/',
+  path: '/typy-urody/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TypyUrodySlugRoute = TypyUrodySlugRouteImport.update({
+  id: '/typy-urody/$slug',
+  path: '/typy-urody/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WynikIdRoute = WynikIdRouteImport.update({
   id: '/wynik/$id',
   path: '/wynik/$id',
@@ -97,119 +127,154 @@ const WynikIdRoute = WynikIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/logowanie': typeof LogowanieRoute
   '/moje-wyniki': typeof MojeWynikiRoute
   '/nie-pamietam-hasla': typeof NiePamietamHaslaRoute
   '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
+  '/odstapienie-umowy': typeof OdstapienieUmowyRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/rejestracja': typeof RejestracjaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/test': typeof TestRoute
   '/weryfikacja': typeof WeryfikacjaRoute
   '/zdjecie': typeof ZdjecieRoute
+  '/typy-urody/$slug': typeof TypyUrodySlugRoute
   '/wynik/$id': typeof WynikIdRoute
+  '/typy-urody/': typeof TypyUrodyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/logowanie': typeof LogowanieRoute
   '/moje-wyniki': typeof MojeWynikiRoute
   '/nie-pamietam-hasla': typeof NiePamietamHaslaRoute
   '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
+  '/odstapienie-umowy': typeof OdstapienieUmowyRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/rejestracja': typeof RejestracjaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/test': typeof TestRoute
   '/weryfikacja': typeof WeryfikacjaRoute
   '/zdjecie': typeof ZdjecieRoute
+  '/typy-urody/$slug': typeof TypyUrodySlugRoute
   '/wynik/$id': typeof WynikIdRoute
+  '/typy-urody': typeof TypyUrodyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/logowanie': typeof LogowanieRoute
   '/moje-wyniki': typeof MojeWynikiRoute
   '/nie-pamietam-hasla': typeof NiePamietamHaslaRoute
   '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
+  '/odstapienie-umowy': typeof OdstapienieUmowyRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/rejestracja': typeof RejestracjaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/test': typeof TestRoute
   '/weryfikacja': typeof WeryfikacjaRoute
   '/zdjecie': typeof ZdjecieRoute
+  '/typy-urody/$slug': typeof TypyUrodySlugRoute
   '/wynik/$id': typeof WynikIdRoute
+  '/typy-urody/': typeof TypyUrodyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/llms.txt'
     | '/logowanie'
     | '/moje-wyniki'
     | '/nie-pamietam-hasla'
     | '/nowe-haslo'
     | '/odstapienie-od-umowy'
+    | '/odstapienie-umowy'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/rejestracja'
+    | '/sitemap.xml'
     | '/test'
     | '/weryfikacja'
     | '/zdjecie'
+    | '/typy-urody/$slug'
     | '/wynik/$id'
+    | '/typy-urody/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/llms.txt'
     | '/logowanie'
     | '/moje-wyniki'
     | '/nie-pamietam-hasla'
     | '/nowe-haslo'
     | '/odstapienie-od-umowy'
+    | '/odstapienie-umowy'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/rejestracja'
+    | '/sitemap.xml'
     | '/test'
     | '/weryfikacja'
     | '/zdjecie'
+    | '/typy-urody/$slug'
     | '/wynik/$id'
+    | '/typy-urody'
   id:
     | '__root__'
     | '/'
+    | '/llms.txt'
     | '/logowanie'
     | '/moje-wyniki'
     | '/nie-pamietam-hasla'
     | '/nowe-haslo'
     | '/odstapienie-od-umowy'
+    | '/odstapienie-umowy'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/rejestracja'
+    | '/sitemap.xml'
     | '/test'
     | '/weryfikacja'
     | '/zdjecie'
+    | '/typy-urody/$slug'
     | '/wynik/$id'
+    | '/typy-urody/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   LogowanieRoute: typeof LogowanieRoute
   MojeWynikiRoute: typeof MojeWynikiRoute
   NiePamietamHaslaRoute: typeof NiePamietamHaslaRoute
   NoweHasloRoute: typeof NoweHasloRoute
   OdstapienieOdUmowyRoute: typeof OdstapienieOdUmowyRoute
+  OdstapienieUmowyRoute: typeof OdstapienieUmowyRoute
   PolitykaCookiesRoute: typeof PolitykaCookiesRoute
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
   RejestracjaRoute: typeof RejestracjaRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TestRoute: typeof TestRoute
   WeryfikacjaRoute: typeof WeryfikacjaRoute
   ZdjecieRoute: typeof ZdjecieRoute
+  TypyUrodySlugRoute: typeof TypyUrodySlugRoute
   WynikIdRoute: typeof WynikIdRoute
+  TypyUrodyIndexRoute: typeof TypyUrodyIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -219,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/logowanie': {
@@ -256,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OdstapienieOdUmowyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/odstapienie-umowy': {
+      id: '/odstapienie-umowy'
+      path: '/odstapienie-umowy'
+      fullPath: '/odstapienie-umowy'
+      preLoaderRoute: typeof OdstapienieUmowyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/polityka-cookies': {
       id: '/polityka-cookies'
       path: '/polityka-cookies'
@@ -284,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RejestracjaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/test': {
       id: '/test'
       path: '/test'
@@ -305,6 +391,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZdjecieRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/typy-urody/': {
+      id: '/typy-urody/'
+      path: '/typy-urody'
+      fullPath: '/typy-urody/'
+      preLoaderRoute: typeof TypyUrodyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/typy-urody/$slug': {
+      id: '/typy-urody/$slug'
+      path: '/typy-urody/$slug'
+      fullPath: '/typy-urody/$slug'
+      preLoaderRoute: typeof TypyUrodySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wynik/$id': {
       id: '/wynik/$id'
       path: '/wynik/$id'
@@ -317,19 +417,24 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   LogowanieRoute: LogowanieRoute,
   MojeWynikiRoute: MojeWynikiRoute,
   NiePamietamHaslaRoute: NiePamietamHaslaRoute,
   NoweHasloRoute: NoweHasloRoute,
   OdstapienieOdUmowyRoute: OdstapienieOdUmowyRoute,
+  OdstapienieUmowyRoute: OdstapienieUmowyRoute,
   PolitykaCookiesRoute: PolitykaCookiesRoute,
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
   RejestracjaRoute: RejestracjaRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TestRoute: TestRoute,
   WeryfikacjaRoute: WeryfikacjaRoute,
   ZdjecieRoute: ZdjecieRoute,
+  TypyUrodySlugRoute: TypyUrodySlugRoute,
   WynikIdRoute: WynikIdRoute,
+  TypyUrodyIndexRoute: TypyUrodyIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

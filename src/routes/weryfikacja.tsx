@@ -8,6 +8,7 @@ import { AuthShell, FormMessage, authErrorMessage } from "@/components/auth-form
 import { pl } from "@/content/pl";
 import { sendEmailCode, verifyEmailCode, type CodePurpose } from "@/lib/api";
 import { safeRedirect } from "@/lib/utils";
+import { seo } from "@/lib/seo";
 
 // Must match "Email OTP Length" in Supabase → Authentication → Providers → Email.
 const CODE_LENGTH = 6;
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/weryfikacja")({
     purpose: search["purpose"] === "recovery" ? "recovery" : undefined,
     redirect: safeRedirect(search["redirect"]),
   }),
-  head: () => ({ meta: [{ title: pl.auth.verify.metaTitle }, { name: "robots", content: "noindex" }] }),
+  head: () => seo({ title: "Weryfikacja adresu e-mail", description: "Wpisz kod z wiadomości e-mail, aby potwierdzić swoje konto w Twój Color.", path: "/weryfikacja", noindex: true }),
   component: VerifyPage,
 });
 

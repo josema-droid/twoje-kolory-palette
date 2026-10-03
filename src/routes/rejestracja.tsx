@@ -8,11 +8,12 @@ import { AuthShell, Field, FormMessage, MIN_PASSWORD_LENGTH, PasswordInput, auth
 import { pl } from "@/content/pl";
 import { signUp } from "@/lib/api";
 import { safeRedirect } from "@/lib/utils";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/rejestracja")({
   // Always return the key: omitting it would let the raw (unsafe) value through from the root route.
   validateSearch: (search: Record<string, unknown>): { redirect?: string | undefined } => ({ redirect: safeRedirect(search["redirect"]) }),
-  head: () => ({ meta: [{ title: pl.auth.signup.metaTitle }, { name: "robots", content: "noindex" }] }),
+  head: () => seo({ title: "Rejestracja konta", description: "Załóż bezpłatne konto i zachowaj swoje wyniki analizy kolorystycznej.", path: "/rejestracja", noindex: true }),
   component: SignupPage,
 });
 

@@ -1,10 +1,10 @@
 import { pl } from "@/content/pl";
 import { CtaBlock } from "./shared";
 import { swatch } from "./utils";
-import jewelryImg from "@/assets/landing/product-jewelry.webp";
-import makeupImg from "@/assets/landing/product-makeup.webp";
-import hairImg from "@/assets/landing/product-hair.webp";
-import outfitImg from "@/assets/landing/product-outfit.webp";
+import jewelryImg from "@/assets/landing/zlota-bizuteria-ciepla-wiosna.webp";
+import makeupImg from "@/assets/landing/makijaz-ciepla-wiosna.webp";
+import hairImg from "@/assets/landing/kolory-wlosow-ciepla-wiosna.webp";
+import outfitImg from "@/assets/landing/stylizacja-ecru-camel-koral.webp";
 
 const productImg = { width: 900, height: 900, loading: "lazy", decoding: "async" } as const;
 

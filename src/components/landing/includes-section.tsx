@@ -1,9 +1,9 @@
 import { pl } from "@/content/pl";
-import cardMark from "@/assets/landing/card-mark.webp";
-import swatchBlack from "@/assets/landing/swatch-black.webp";
-import swatchGold from "@/assets/landing/swatch-gold.webp";
-import swatchLips from "@/assets/landing/swatch-lips.webp";
-import swatchNeutral from "@/assets/landing/swatch-neutral.webp";
+import cardMark from "@/assets/landing/twoj-color-znak.webp";
+import swatchBlack from "@/assets/landing/probka-czern-i-biel.webp";
+import swatchGold from "@/assets/landing/probka-zloto-srebro.webp";
+import swatchLips from "@/assets/landing/probka-kolory-makijazu.webp";
+import swatchNeutral from "@/assets/landing/probka-kolory-neutralne.webp";
 
 const t = pl.landing.includes;
 

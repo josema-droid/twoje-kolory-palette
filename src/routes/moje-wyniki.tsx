@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { claimLocalResults, listMyResults, type ResultSummary } from "@/lib/api";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/moje-wyniki")({
-  head: () => ({ meta: [{ title: pl.myResults.metaTitle }, { name: "robots", content: "noindex" }] }),
+  head: () => seo({ title: "Moje wyniki analiz", description: "Twoje zapisane analizy kolorystyczne i palety kolorów w jednym miejscu.", path: "/moje-wyniki", noindex: true }),
   component: MyResultsPage,
 });
 

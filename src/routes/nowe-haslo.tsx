@@ -7,10 +7,11 @@ import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { updatePassword } from "@/lib/api";
 import { safeRedirect } from "@/lib/utils";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/nowe-haslo")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string | undefined } => ({ redirect: safeRedirect(search["redirect"]) }),
-  head: () => ({ meta: [{ title: pl.auth.newPassword.metaTitle }, { name: "robots", content: "noindex" }] }),
+  head: () => seo({ title: "Zmiana hasła", description: "Ustaw nowe hasło do swojego konta w Twój Color.", path: "/nowe-haslo", noindex: true }),
   component: NewPasswordPage,
 });
 

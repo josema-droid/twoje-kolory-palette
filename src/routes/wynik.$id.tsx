@@ -10,11 +10,12 @@ import { createCheckoutSession } from "@/lib/checkout";
 import { trackEvent } from "@/lib/tracking";
 import type { ColorRecommendation } from "@/content/engine";
 import type { Result } from "@/types/result";
+import { seo } from "@/lib/seo";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const Route = createFileRoute("/wynik/$id")({
-  head: () => ({ meta: [{ title: "Twój wynik — Twój Color" }, { name: "description", content: "Poznaj swoją osobistą paletę kolorystyczną." }, { property: "og:title", content: "Twój wynik — Twój Color" }, { property: "og:description", content: "Poznaj swoją osobistą paletę kolorystyczną." }] }),
+  head: ({ params }) => seo({ title: "Wynik analizy kolorystycznej", description: "Twoja osobista paleta kolorów, neutrale, akcenty oraz wskazówki dotyczące makijażu i biżuterii.", path: `/wynik/${params.id}`, noindex: true }),
   component: ResultPage,
 });
 

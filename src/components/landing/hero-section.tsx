@@ -8,7 +8,7 @@ export function HeroSection() {
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__stage">
         <div className="hero__media">
-          <img src={heroImage.src} srcSet={heroImage.srcSet} sizes={heroImage.sizes} width={2400} height={1600} alt="" fetchPriority="high" decoding="async" />
+          <img src={heroImage.src} srcSet={heroImage.srcSet} sizes={heroImage.sizes} width={2400} height={1600} alt={t.imageAlt} fetchPriority="high" decoding="async" />
         </div>
         <div className="hero__content">
           <p className="lp-eyebrow lp-eyebrow--light">{t.eyebrow}</p>

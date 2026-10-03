@@ -13,9 +13,10 @@ import {
 } from "@/content/navigation";
 import type { Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/test")({
-  head: () => ({ meta: [{ title: "Test kolorystyczny — Twój Color" }, { name: "description", content: "Odpowiedz na pytania o swojej urodzie i stylu." }, { property: "og:title", content: "Test kolorystyczny — Twój Color" }, { property: "og:description", content: "Kilka pytań dzieli Cię od osobistej palety kolorów." }] }),
+  head: () => seo({ title: "Test kolorystyczny online — sprawdź swój typ urody", description: "Odpowiedz na kilka pytań o swoją naturalną urodę — to pierwszy krok personalnej analizy kolorystycznej Twój Color.", path: "/test" }),
   component: QuizPage,
 });
 

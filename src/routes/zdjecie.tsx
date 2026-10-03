@@ -7,9 +7,10 @@ import { pl } from "@/content/pl";
 import { analyzePhoto } from "@/lib/api";
 import type { Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/zdjecie")({
-  head: () => ({ meta: [{ title: "Dodaj selfie — Twój Color" }, { name: "description", content: "Dodaj naturalne selfie do demonstracyjnej analizy kolorystycznej." }, { property: "og:title", content: "Dodaj selfie — Twój Color" }, { property: "og:description", content: "Jedno naturalne zdjęcie dzieli Cię od osobistej palety." }] }),
+  head: () => seo({ title: "Zdjęcie do analizy kolorystycznej", description: "Dodaj naturalne zdjęcie twarzy, aby dokończyć analizę kolorystyczną i poznać swoją paletę kolorów.", path: "/zdjecie", noindex: true }),
   component: PhotoPage,
 });
 

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
-import hero from "@/assets/landing/hero.webp";
-import heroSmall from "@/assets/landing/hero-small.webp";
+import hero from "@/assets/landing/kobieta-analiza-kolorystyczna.webp";
+import heroSmall from "@/assets/landing/kobieta-analiza-kolorystyczna-1200.webp";
 
 /** Feeds a hex colour into the CSS `--c` variable used by swatches. */
 export function swatch(hex: string) {

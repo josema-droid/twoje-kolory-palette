@@ -3,10 +3,10 @@ import { Link } from "@tanstack/react-router";
 import { pl } from "@/content/pl";
 import { CenterHead } from "./shared";
 import { swatch } from "./utils";
-import lookFlatlay from "@/assets/landing/look-flatlay.webp";
-import comboEcru from "@/assets/landing/combo-ecru.webp";
-import comboPeach from "@/assets/landing/combo-peach.webp";
-import comboMint from "@/assets/landing/combo-mint.webp";
+import lookFlatlay from "@/assets/landing/stylizacja-ecru-mieta-brzoskwinia.webp";
+import comboEcru from "@/assets/landing/polaczenie-ecru.webp";
+import comboPeach from "@/assets/landing/polaczenie-brzoskwinia.webp";
+import comboMint from "@/assets/landing/polaczenie-mieta.webp";
 
 const t = pl.landing.seasons;
 
@@ -28,6 +28,7 @@ export function SeasonsSection() {
   const season = t.list[seasonIndex]!;
   const type = season.types[typeIndex]!;
   const photos = comboPhotos[type.key];
+  const comboNames = type.combo.text.split(" + ");
 
   return (
     <section className="lp-section seasons" aria-labelledby="seasons-title">
@@ -73,7 +74,7 @@ export function SeasonsSection() {
                 <ul className="combo__dots">
                   {type.combo.colors.map((hex, i) => (
                     <li key={hex}>
-                      {photos ? <img src={photos[i]} width={120} height={120} alt="" loading="lazy" /> : <span style={swatch(hex)} />}
+                      {photos ? <img src={photos[i]} width={120} height={120} alt={`Tkanina: ${comboNames[i] ?? ""}`} loading="lazy" /> : <span style={swatch(hex)} />}
                     </li>
                   ))}
                 </ul>
@@ -84,9 +85,10 @@ export function SeasonsSection() {
           <figure className="palette-card__media">
             <img src={lookFlatlay} width={1100} height={1100} alt={t.mediaAlt} loading="lazy" decoding="async" />
             <figcaption>{t.mediaCaption}</figcaption>
-            <Link to="/test" className="lp-btn lp-btn--pill lp-btn--brown">{t.cta} <span className="lp-btn__arrow" aria-hidden="true">→</span></Link>
+            <Link to="/typy-urody/$slug" params={{ slug: type.key }} className="lp-btn lp-btn--pill lp-btn--brown">{t.cta} <span className="lp-btn__arrow" aria-hidden="true">→</span></Link>
           </figure>
         </article>
+        <p className="seasons__all"><Link to="/typy-urody">{t.allTypes} →</Link></p>
       </div>
     </section>
   );

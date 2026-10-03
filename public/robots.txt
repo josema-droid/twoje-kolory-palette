@@ -1,14 +1,11 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Twój Color — https://twojcolor.com
 User-agent: *
 Allow: /
+
+# Personal analysis results: never crawl. (Account pages and funnel steps
+# send "noindex" instead; pagination URLs under /page/ get an X-Robots-Tag
+# noindex header. Neither is blocked here, or crawlers couldn't see the noindex.)
+Disallow: /wynik/
+Disallow: /moje-wyniki
+
+Sitemap: https://twojcolor.com/sitemap.xml

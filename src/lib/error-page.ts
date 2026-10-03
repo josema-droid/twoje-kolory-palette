@@ -1,28 +1,31 @@
+// Last-resort HTML for server errors, rendered without React (see src/start.ts).
 export function renderErrorPage(): string {
   return `<!doctype html>
-<html lang="en">
+<html lang="pl">
   <head>
     <meta charset="utf-8" />
-    <title>This page didn't load</title>
+    <title>Coś poszło nie tak — Twój Color</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/favicon.ico" />
     <style>
-      body { font: 15px/1.5 system-ui, -apple-system, sans-serif; background: #fafafa; color: #111; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
-      .card { max-width: 28rem; width: 100%; text-align: center; padding: 2rem; }
-      h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
-      p { color: #4b5563; margin: 0 0 1.5rem; }
-      .actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
-      a, button { padding: 0.5rem 1rem; border-radius: 0.375rem; font: inherit; cursor: pointer; text-decoration: none; border: 1px solid transparent; }
-      .primary { background: #111; color: #fff; }
-      .secondary { background: #fff; color: #111; border-color: #d1d5db; }
+      body { font: 16px/1.6 Georgia, "Times New Roman", serif; background: #fffbf8; color: #4a3a2e; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
+      .card { max-width: 32rem; width: 100%; text-align: center; }
+      h1 { font-size: 2rem; line-height: 1.2; font-weight: 600; color: #3a1a14; margin: 0 0 .75rem; }
+      p { margin: 0 0 1.75rem; font-family: system-ui, -apple-system, sans-serif; }
+      .actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+      a, button { padding: .8rem 1.5rem; border-radius: 999px; font: 600 15px system-ui, -apple-system, sans-serif; cursor: pointer; text-decoration: none; border: 1px solid transparent; }
+      .primary { background: #38241f; color: #fffcf2; }
+      .secondary { background: #fffdfb; color: #2f1a14; border-color: #cdb6a7; }
     </style>
   </head>
   <body>
     <div class="card">
-      <h1>This page didn't load</h1>
-      <p>Something went wrong on our end. You can try refreshing or head back home.</p>
+      <h1>Ta strona się nie wczytała.</h1>
+      <p>Wystąpił błąd po naszej stronie. Spróbuj odświeżyć stronę albo wróć na stronę główną.</p>
       <div class="actions">
-        <button class="primary" onclick="location.reload()">Try again</button>
-        <a class="secondary" href="/">Go home</a>
+        <button class="primary" onclick="location.reload()">Spróbuj ponownie</button>
+        <a class="secondary" href="/">Strona główna</a>
       </div>
     </div>
   </body>
