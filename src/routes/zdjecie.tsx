@@ -9,7 +9,7 @@ import type { Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
 
 export const Route = createFileRoute("/zdjecie")({
-  head: () => ({ meta: [{ title: "Dodaj selfie — Twoje Kolory" }, { name: "description", content: "Dodaj naturalne selfie do demonstracyjnej analizy kolorystycznej." }, { property: "og:title", content: "Dodaj selfie — Twoje Kolory" }, { property: "og:description", content: "Jedno naturalne zdjęcie dzieli Cię od osobistej palety." }] }),
+  head: () => ({ meta: [{ title: "Dodaj selfie — Twój Color" }, { name: "description", content: "Dodaj naturalne selfie do demonstracyjnej analizy kolorystycznej." }, { property: "og:title", content: "Dodaj selfie — Twój Color" }, { property: "og:description", content: "Jedno naturalne zdjęcie dzieli Cię od osobistej palety." }] }),
   component: PhotoPage,
 });
 

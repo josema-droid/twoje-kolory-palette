@@ -20,7 +20,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           price_data: {
             currency: "pln",
             unit_amount: 3900,
-            product_data: { name: "Pełny wynik — Twoje Kolory" },
+            product_data: { name: "Pełny wynik — Twój Color" },
           },
           quantity: 1,
         },

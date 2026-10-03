@@ -15,7 +15,7 @@ import type { Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
 
 export const Route = createFileRoute("/test")({
-  head: () => ({ meta: [{ title: "Test kolorystyczny — Twoje Kolory" }, { name: "description", content: "Odpowiedz na pytania o swojej urodzie i stylu." }, { property: "og:title", content: "Test kolorystyczny — Twoje Kolory" }, { property: "og:description", content: "Kilka pytań dzieli Cię od osobistej palety kolorów." }] }),
+  head: () => ({ meta: [{ title: "Test kolorystyczny — Twój Color" }, { name: "description", content: "Odpowiedz na pytania o swojej urodzie i stylu." }, { property: "og:title", content: "Test kolorystyczny — Twój Color" }, { property: "og:description", content: "Kilka pytań dzieli Cię od osobistej palety kolorów." }] }),
   component: QuizPage,
 });
 

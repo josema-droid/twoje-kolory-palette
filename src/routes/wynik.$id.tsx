@@ -14,7 +14,7 @@ import type { Result } from "@/types/result";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const Route = createFileRoute("/wynik/$id")({
-  head: () => ({ meta: [{ title: "Twój wynik — Twoje Kolory" }, { name: "description", content: "Poznaj swoją osobistą paletę kolorystyczną." }, { property: "og:title", content: "Twój wynik — Twoje Kolory" }, { property: "og:description", content: "Poznaj swoją osobistą paletę kolorystyczną." }] }),
+  head: () => ({ meta: [{ title: "Twój wynik — Twój Color" }, { name: "description", content: "Poznaj swoją osobistą paletę kolorystyczną." }, { property: "og:title", content: "Twój wynik — Twój Color" }, { property: "og:description", content: "Poznaj swoją osobistą paletę kolorystyczną." }] }),
   component: ResultPage,
 });
 

@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage } from "@/components/legal-page";
 import { pl } from "@/content/pl";
-export const Route = createFileRoute("/odstapienie-od-umowy")({ head: () => ({ meta: [{ title: "Odstąpienie od umowy — Twoje Kolory" }, { name: "description", content: "Informacje o odstąpieniu od umowy w serwisie Twoje Kolory." }, { property: "og:title", content: "Odstąpienie od umowy — Twoje Kolory" }, { property: "og:description", content: "Informacje o odstąpieniu od umowy w serwisie Twoje Kolory." }] }), component: () => <LegalPage content={pl.legal.withdrawal} /> });
+export const Route = createFileRoute("/odstapienie-od-umowy")({ head: () => ({ meta: [{ title: "Odstąpienie od umowy — Twój Color" }, { name: "description", content: "Informacje o odstąpieniu od umowy w serwisie Twój Color." }, { property: "og:title", content: "Odstąpienie od umowy — Twój Color" }, { property: "og:description", content: "Informacje o odstąpieniu od umowy w serwisie Twój Color." }] }), component: () => <LegalPage content={pl.legal.withdrawal} /> });
