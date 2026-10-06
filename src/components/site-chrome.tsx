@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { trackEvent } from "@/lib/tracking";
+import { disableAnalytics, enableAnalytics } from "@/lib/analytics";
 import { ShareButton } from "@/components/share-button";
 import logoMark from "@/assets/landing/twoj-color-logo.png";
 
@@ -25,10 +26,19 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     trackEvent("PageView", { path: pathname });
     setMenuOpen(false); // close the mobile menu after navigating
   }, [pathname]);
-  useEffect(() => { setCookieChoice(localStorage.getItem("twoje-kolory-cookies")); }, []);
+  useEffect(() => {
+    const saved = localStorage.getItem("twoje-kolory-cookies");
+    setCookieChoice(saved);
+    if (saved === "all") enableAnalytics();
+  }, []);
+  const [bannerOpen, setBannerOpen] = useState(false);
   const choose = (value: string) => {
     localStorage.setItem("twoje-kolory-cookies", value);
     setCookieChoice(value);
+    setBannerOpen(false);
+    // Google Analytics runs only with consent ("Akceptuj wszystkie").
+    if (value === "all") enableAnalytics();
+    else disableAnalytics();
   };
 
   return <div className="min-h-screen bg-background text-foreground">
@@ -76,6 +86,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
             <Link to="/polityka-prywatnosci" className="hover:text-primary">{pl.legal.privacy.label}</Link>
             <Link to="/polityka-cookies" className="hover:text-primary">{pl.legal.cookies.label}</Link>
             <Link to="/odstapienie-umowy" className="hover:text-primary">{pl.legal.withdrawal.label}</Link>
+            <button type="button" onClick={() => setBannerOpen(true)} className="text-left hover:text-primary">{pl.cookies.settings}</button>
           </nav>
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground">{pl.footer.contactLabel}</p>
@@ -89,7 +100,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     </footer>
-    {cookieChoice === null && <aside className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-lg border border-border bg-card p-5 shadow-xl md:bottom-6 md:p-6" role="dialog" aria-label={pl.cookies.title}>
+    {(cookieChoice === null || bannerOpen) && <aside className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-lg border border-border bg-card p-5 shadow-xl md:bottom-6 md:p-6" role="dialog" aria-label={pl.cookies.title}>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6"><div className="flex-1"><p className="font-display text-lg font-semibold">{pl.cookies.title}</p><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{pl.cookies.text}</p></div><div className="flex shrink-0 gap-2"><Button variant="outline" className="h-11 flex-1 rounded-full px-4 text-xs md:flex-none" onClick={() => choose("necessary")}>{pl.cookies.necessary}</Button><Button className="h-11 flex-1 rounded-full px-4 text-xs md:flex-none" onClick={() => choose("all")}>{pl.cookies.accept}</Button></div></div>
     </aside>}
   </div>;

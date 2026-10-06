@@ -1,23 +1,15 @@
-import {
-  commonStart,
-  getAgeGroup,
-  getQuestionsForAge,
-  getVisibleQuestions,
-  type Answers,
-  type Question,
-} from "./funnel";
+import { commonStart, getQuestionsForPath, getVisibleQuestions, type Answers, type Question } from "./funnel";
 
 export function getAllQuestionsForCurrentPath(answers: Answers): Question[] {
   const start = getVisibleQuestions(commonStart, answers);
-  const age = getAgeGroup(answers);
-  if (!age) return start;
-  return [...start, ...getVisibleQuestions(getQuestionsForAge(age), answers)];
+  const path = getQuestionsForPath(answers);
+  if (!path) return start;
+  return [...start, ...getVisibleQuestions(path, answers)];
 }
 
 export function getAllPotentialQuestionIds(answers: Answers): Set<string> {
   const ids = new Set<string>(commonStart.map((q) => q.id));
-  const age = getAgeGroup(answers);
-  if (age) getQuestionsForAge(age).forEach((q) => ids.add(q.id));
+  getQuestionsForPath(answers)?.forEach((q) => ids.add(q.id));
   return ids;
 }
 

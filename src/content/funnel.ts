@@ -1,3 +1,4 @@
+export type Gender = "female" | "male";
 export type AgeGroup = "25-35" | "36-55" | "56+";
 export type AnswerValue = string | string[];
 
@@ -58,14 +59,24 @@ const includesAny = (answers: Answers, id: string, needles: string[]) => {
   return typeof value === "string" && needles.includes(value);
 };
 
-// This app is women-only for now (no men's funnel has been built yet), so
-// the original gender-selector step was dropped — the quiz starts at age.
+export const GENDER_FEMALE = "Dla kobiety";
+export const GENDER_MALE = "Dla mężczyzny";
+
+// Everyone starts here. Women then branch by age; men have a single path
+// (questionsMen) that branches by their main goal instead.
 export const commonStart: Question[] = [
+  {
+    id: "gender",
+    title: "Dla kogo przygotowujemy analizę?",
+    type: "single",
+    options: [GENDER_FEMALE, GENDER_MALE],
+  },
   {
     id: "age",
     title: "W jakim jesteś wieku?",
     type: "single",
     options: ["25–35 lat", "36–55 lat", "56 lat lub więcej"],
+    when: (a) => a["gender"] === GENDER_FEMALE,
   },
 ];
 
@@ -165,7 +176,7 @@ export const questions2535: Question[] = [
   },
   {
     id: "white",
-    title: "Gdy zakładasz jasny kolor blisko twarzy, lepiej czujesz się w:",
+    title: "Gdy zakładasz jasny kolor blisko twarzy, lepiej czujesz się w jakim odcieniu bieli?",
     type: "single",
     options: [
       "Czystej, chłodnej bieli",
@@ -569,7 +580,7 @@ export const questions56plus: Question[] = [
   },
   {
     id: "contrastPreference",
-    title: "Wolisz, kiedy kolor przy twarzy:",
+    title: "Wolisz, kiedy kolor przy twarzy delikatnie współgra z Twoją urodą czy daje wyraźniejszy kontrast?",
     type: "single",
     options: [
       "Delikatnie współgra z moją urodą",
@@ -661,6 +672,308 @@ export const questions56plus: Question[] = [
     ],
   },
 ];
+
+/* ---------- MEN ---------- */
+
+// Main goal (single choice) decides which block of three dynamic questions follows.
+export const MEN_GOAL_DAILY = "Codzienna garderoba";
+export const MEN_GOAL_WORK = "Ubrania do pracy";
+export const MEN_GOAL_SUITS = "Garnitury i formalne okazje";
+export const MEN_GOAL_DATES = "Randki i wyjścia";
+export const MEN_GOAL_IMAGE = "Zdjęcia, wizerunek i marka osobista";
+export const MEN_GOAL_ALL = "Chcę poznać całą swoją paletę";
+
+const menGoal = (a: Answers, ...goals: string[]) => goals.includes(String(a["goal"] ?? ""));
+const MEN_SHAVED_HEAD = "Ogolona głowa lub łysienie";
+const MEN_NO_BEARD = "Nie, golę się na gładko";
+const hasBeard = (a: Answers) => !!a["beard"] && a["beard"] !== MEN_NO_BEARD;
+const dyesHair = (a: Answers) => !!a["dyedHair"] && a["dyedHair"] !== "Nie, mam naturalny kolor";
+const isGreying = (a: Answers) =>
+  String(a["naturalHair"] ?? "").includes("siw") ||
+  String(a["beardColor"] ?? "").includes("siw") ||
+  String(a["dyedHair"] ?? "").includes("siw");
+
+export const questionsMen: Question[] = [
+  {
+    id: "goal",
+    title: "Do czego najbardziej przyda Ci się analiza kolorystyczna?",
+    type: "single",
+    options: [MEN_GOAL_DAILY, MEN_GOAL_WORK, MEN_GOAL_SUITS, MEN_GOAL_DATES, MEN_GOAL_IMAGE, MEN_GOAL_ALL],
+  },
+  {
+    id: "style",
+    title: "Jak najczęściej się ubierasz?",
+    type: "single",
+    options: [
+      "Swobodnie — jeansy, T-shirty, bluzy",
+      "Smart casual — chinosy, koszule, swetry",
+      "Klasycznie i elegancko",
+      "Biznesowo — marynarki i garnitury",
+      "Sportowo",
+      "Minimalistycznie",
+      "Modowo i wyraziście",
+    ],
+  },
+  {
+    id: "desiredEffect",
+    title: "Jaki efekt najbardziej chciałbyś osiągnąć dzięki dobrze dobranym kolorom?",
+    type: "single",
+    options: [
+      "Zdrowszy i bardziej wypoczęty wygląd",
+      "Bardziej wyraziste oczy",
+      "Mniej widoczne cienie pod oczami lub zaczerwienienia",
+      "Bardziej profesjonalny wygląd i większy autorytet",
+      "Większy kontrast i bardziej wyrazisty wygląd",
+      "Spójną garderobę, którą łatwo łączyć",
+      "Nie wiem — chcę, żeby analiza mi to pokazała",
+    ],
+  },
+  {
+    id: "naturalHair",
+    title: "Jaki jest Twój naturalny kolor włosów?",
+    type: "single",
+    options: [...naturalHair.slice(0, -1), "Częściowo siwe", "Siwe lub srebrne", MEN_SHAVED_HEAD, "Trudno mi określić"],
+  },
+  { id: "eyes", title: "Jaki masz kolor oczu?", type: "single", options: eyeColors },
+  {
+    id: "beard",
+    title: "Czy nosisz zarost?",
+    type: "single",
+    options: ["Tak, pełną brodę", "Tak, krótki lub kilkudniowy zarost", "Tak, wąsy lub kozią bródkę", MEN_NO_BEARD],
+  },
+  {
+    id: "beardColor",
+    title: "Jaki jest naturalny kolor Twojego zarostu?",
+    type: "single",
+    options: ["Jasny blond", "Ciemny blond", "Rudy lub miedziany", "Jasny brąz", "Ciemny brąz", "Czarny", "Częściowo siwy", "Siwy", "Trudno mi określić"],
+    when: hasBeard,
+  },
+  {
+    id: "beardContrast",
+    title: "Czy kolor zarostu różni się wyraźnie od koloru włosów?",
+    type: "single",
+    options: ["Nie, jest podobny", "Tak, jest jaśniejszy", "Tak, jest ciemniejszy", "Tak, jest bardziej rudy lub ciepły", "Tak, jest bardziej siwy"],
+    when: hasBeard,
+  },
+  {
+    id: "white",
+    title: "W którym jasnym kolorze wyglądasz lepiej: czystej bieli czy kremie / złamanej bieli?",
+    type: "single",
+    options: ["W czystej bieli", "W kremie lub złamanej bieli", "Obie wyglądają podobnie", "Nie wiem", "Rzadko noszę jasne kolory"],
+  },
+  {
+    id: "black",
+    title: "Jak wyglądasz w czerni noszonej blisko twarzy?",
+    type: "single",
+    options: [
+      "Bardzo dobrze — czerń mnie podkreśla",
+      "Dobrze, ale nie daje efektu „wow”",
+      "Mam wrażenie, że czerń mnie przytłacza",
+      "Twarz wygląda przy niej na bardziej zmęczoną",
+      "Prawie nie noszę czerni",
+      "Nigdy się nad tym nie zastanawiałem",
+    ],
+  },
+  {
+    id: "jewelry",
+    title: "Jakie metalowe dodatki zazwyczaj wyglądają na Tobie najlepiej?",
+    helper: "Na przykład zegarek, obrączka, spinki do mankietów czy oprawki okularów.",
+    type: "single",
+    options: ["Złote", "Srebrne lub stalowe", "Zarówno złote, jak i srebrne", "Nigdy nie potrafiłem tego ocenić", "Prawie nie noszę metalowych dodatków"],
+  },
+  {
+    id: "colorOpenness",
+    title: "Jak bardzo jesteś otwarty na kolor w swojej garderobie?",
+    type: "single",
+    options: [
+      "Najlepiej czuję się głównie w neutralnych kolorach",
+      "Lubię neutrale z kilkoma bezpiecznymi akcentami",
+      "Lubię kolor, ale nie zawsze wiem, które odcienie wybierać",
+      "Bardzo lubię kolor",
+      "Chcę eksperymentować bardziej niż do tej pory",
+    ],
+  },
+
+  // Codzienna garderoba (also used when he wants the whole palette)
+  {
+    id: "wardrobeBuy",
+    title: "Których elementów garderoby kupujesz najwięcej?",
+    helper: "Możesz wybrać maksymalnie 2 odpowiedzi.",
+    type: "multi",
+    max: 2,
+    options: ["T-shirty i koszulki polo", "Koszule", "Swetry i bluzy", "Spodnie i jeansy", "Kurtki i płaszcze", "Buty i dodatki"],
+    when: (a) => menGoal(a, MEN_GOAL_DAILY, MEN_GOAL_ALL),
+  },
+  {
+    id: "wardrobeProblem",
+    title: "Które ubrania najtrudniej jest Ci dobrać kolorystycznie?",
+    type: "single",
+    options: ["T-shirty i koszulki polo", "Koszule", "Swetry", "Kurtki i płaszcze", "Spodnie", "Dodatki — paski, szaliki, czapki", "Właściwie całą garderobę"],
+    when: (a) => menGoal(a, MEN_GOAL_DAILY, MEN_GOAL_ALL),
+  },
+  {
+    id: "situations",
+    title: "W jakich sytuacjach najbardziej chcesz korzystać ze swojej palety kolorystycznej?",
+    type: "single",
+    options: ["Na co dzień", "W pracy", "Na spotkaniach ze znajomymi", "Na randkach", "Podczas zakupów", "W każdej sytuacji"],
+    when: (a) => menGoal(a, MEN_GOAL_DAILY, MEN_GOAL_ALL),
+  },
+
+  // Praca
+  {
+    id: "workStyle",
+    title: "Jakiego stylu najczęściej potrzebujesz w pracy?",
+    type: "single",
+    options: ["Formalnego — garnitur i krawat", "Biznesowego — marynarka bez krawata", "Smart casual", "Swobodnego", "Kreatywnego", "Nie mam określonego stylu w pracy"],
+    when: (a) => menGoal(a, MEN_GOAL_WORK),
+  },
+  {
+    id: "formalFrequency",
+    title: "Jak często nosisz koszule, marynarki lub garnitury?",
+    type: "single",
+    options: ["Codziennie", "Kilka razy w tygodniu", "Tylko na ważne spotkania", "Rzadko"],
+    when: (a) => menGoal(a, MEN_GOAL_WORK),
+  },
+  {
+    id: "workProblem",
+    title: "Które elementy garderoby zawodowej najtrudniej jest Ci dobrać kolorystycznie?",
+    type: "single",
+    options: ["Koszule", "Krawaty", "Marynarki", "Garnitury", "Swetry i kardigany", "Buty i paski", "Połączenie wszystkich elementów"],
+    when: (a) => menGoal(a, MEN_GOAL_WORK),
+  },
+
+  // Garnitury / formalne okazje
+  {
+    id: "suitColors",
+    title: "Jakie kolory garniturów najczęściej nosisz?",
+    helper: "Możesz wybrać maksymalnie 2 odpowiedzi.",
+    type: "multi",
+    max: 2,
+    options: ["Granatowy", "Grafitowy", "Jasnoszary", "Czarny", "Beżowy lub brązowy", "Niebieski", "Nie mam jeszcze garnituru"],
+    when: (a) => menGoal(a, MEN_GOAL_SUITS),
+  },
+  {
+    id: "formalProblem",
+    title: "Które elementy formalnej garderoby najtrudniej jest Ci dobrać?",
+    type: "single",
+    options: ["Kolor garnituru", "Koszula", "Krawat lub mucha", "Poszetka", "Buty i pasek", "Dodatki — spinki, zegarek", "Całe zestawienie"],
+    when: (a) => menGoal(a, MEN_GOAL_SUITS),
+  },
+  {
+    id: "formalOccasions",
+    title: "Na jakie okazje najczęściej potrzebujesz bardziej formalnego stroju?",
+    type: "single",
+    options: ["Spotkania biznesowe", "Wesela i uroczystości rodzinne", "Gale i wydarzenia wieczorowe", "Rozmowy o pracę", "Rzadko — ale chcę być przygotowany"],
+    when: (a) => menGoal(a, MEN_GOAL_SUITS),
+  },
+
+  // Randki / wyjścia
+  {
+    id: "dateStyle",
+    title: "Jak najczęściej ubierasz się na randkę lub wieczorne wyjście?",
+    type: "single",
+    options: ["Jeansy i T-shirt", "Jeansy i koszula", "Chinosy i sweter", "Marynarka do jeansów", "Elegancko — koszula i marynarka", "Różnie, zależy od okazji"],
+    when: (a) => menGoal(a, MEN_GOAL_DATES),
+  },
+  {
+    id: "contrastPreference",
+    title: "Wolisz wyglądać bardziej klasycznie czy bardziej wyraziście?",
+    type: "single",
+    options: ["Klasycznie", "Klasycznie z jednym wyraźnym akcentem", "Wyraziście", "Zależy od okazji"],
+    when: (a) => menGoal(a, MEN_GOAL_DATES),
+  },
+  {
+    id: "accentFocus",
+    title: "Czy chcesz, aby rekomendacje skupiały się bardziej na neutralach czy również na mocniejszych kolorach?",
+    type: "single",
+    options: ["Głównie na neutralach", "Na neutralach z kilkoma akcentami", "Również na mocniejszych kolorach"],
+    when: (a) => menGoal(a, MEN_GOAL_DATES),
+  },
+
+  // Zdjęcia / wizerunek / marka osobista
+  {
+    id: "imageUse",
+    title: "Gdzie najczęściej będziesz wykorzystywać te kolory?",
+    type: "single",
+    options: ["Zdjęcia profilowe — LinkedIn, media społecznościowe", "Nagrania wideo i wideorozmowy", "Wystąpienia i prezentacje", "Sesje zdjęciowe", "Telewizja i media"],
+    when: (a) => menGoal(a, MEN_GOAL_IMAGE),
+  },
+  {
+    id: "imageEffect",
+    title: "Czy zależy Ci bardziej na profesjonalnym, naturalnym czy wyrazistym efekcie?",
+    type: "single",
+    options: ["Profesjonalnym", "Naturalnym", "Wyrazistym"],
+    when: (a) => menGoal(a, MEN_GOAL_IMAGE),
+  },
+  {
+    id: "cameraFrequency",
+    title: "Czy często występujesz przed kamerą lub robisz profesjonalne zdjęcia?",
+    type: "single",
+    options: ["Tak, regularnie", "Od czasu do czasu", "Rzadko, ale mam ważne wydarzenie", "Nie, ale chcę dobrze wyglądać na zdjęciach"],
+    when: (a) => menGoal(a, MEN_GOAL_IMAGE),
+  },
+
+  // Włosy
+  {
+    id: "dyedHair",
+    title: "Czy obecnie masz farbowane włosy?",
+    type: "single",
+    options: ["Nie, mam naturalny kolor", "Tak, farbuję włosy", "Tak, tuszuję siwe włosy", "Tak, farbuję włosy i zarost"],
+    when: (a) => a["naturalHair"] !== MEN_SHAVED_HEAD,
+  },
+  {
+    id: "hairChange",
+    title: "Czy chcesz utrzymać obecny kolor czy rozważasz zmianę?",
+    type: "single",
+    options: ["Nie, chcę zostać przy obecnym kolorze", "Tak, planuję zmianę", "Chcę wrócić do naturalnego koloru", "Jeszcze nie wiem"],
+    when: dyesHair,
+  },
+  {
+    id: "hairGoal",
+    title: "Jakiego efektu najbardziej oczekujesz od rekomendacji dotyczącej włosów?",
+    type: "single",
+    options: ["Naturalnego wyglądu", "Odświeżenia i odmłodzenia", "Lepszego dopasowania do oczu i cery", "Dopasowania koloru zarostu do włosów", "Wiedzy, jakich odcieni unikać"],
+    when: dyesHair,
+  },
+
+  // Siwienie
+  {
+    id: "greyHairApproach",
+    title: "Czy chcesz podkreślić naturalne siwienie czy raczej je neutralizować?",
+    type: "single",
+    options: ["Chcę podkreślić naturalne siwienie", "Wolę je neutralizować", "Jeszcze nie wiem"],
+    when: isGreying,
+  },
+  {
+    id: "greyWardrobeMatch",
+    title: "Czy zależy Ci na dopasowaniu garderoby do obecnego koloru włosów i zarostu?",
+    type: "single",
+    options: ["Tak, bardzo", "Trochę", "Nie, to dla mnie mniej ważne"],
+    when: isGreying,
+  },
+
+  {
+    id: "outfit",
+    title: "Jaką przykładową stylizację chciałbyś otrzymać?",
+    type: "single",
+    options: ["Codzienną", "Do pracy", "Formalną z garniturem", "Na randkę lub wieczorne wyjście", "Weekendową", "Do zdjęć lub wystąpień"],
+  },
+];
+
+export function getGender(answers: Answers): Gender | null {
+  if (answers["gender"] === GENDER_FEMALE) return "female";
+  if (answers["gender"] === GENDER_MALE) return "male";
+  return null;
+}
+
+/** Questions after the common start for the current gender/age, or null until those are answered. */
+export function getQuestionsForPath(answers: Answers): Question[] | null {
+  const gender = getGender(answers);
+  if (gender === "male") return questionsMen;
+  if (gender !== "female") return null;
+  const age = getAgeGroup(answers);
+  return age ? getQuestionsForAge(age) : null;
+}
 
 export function getAgeGroup(answers: Answers): AgeGroup | null {
   if (answers["age"] === "25–35 lat") return "25-35";

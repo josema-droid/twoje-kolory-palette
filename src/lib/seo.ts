@@ -2,7 +2,6 @@
 export const SITE_URL = "https://twojcolor.com";
 export const SITE_NAME = "Twój Color";
 export const CONTACT_EMAIL = "info@twojcolor.com";
-export const PRICE_PLN = "39.00";
 
 export const absoluteUrl = (path: string) => new URL(path, SITE_URL).href;
 
@@ -100,7 +99,6 @@ export function serviceSchema(description: string): LdJson {
     provider: orgRef,
     areaServed: { "@type": "Country", name: "Polska" },
     availableChannel: { "@type": "ServiceChannel", serviceUrl: absoluteUrl("/test") },
-    offers: { "@type": "Offer", price: PRICE_PLN, priceCurrency: "PLN", url: absoluteUrl("/test"), availability: "https://schema.org/InStock" },
   };
 }
 

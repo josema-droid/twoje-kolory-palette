@@ -62,16 +62,28 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
     return new Response("Invalid signature", { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+  // "completed" fires for every finished checkout, but delayed methods (e.g. bank
+  // transfers, sometimes Przelewy24) are still "unpaid" at that point and confirm
+  // later with async_payment_succeeded. Only unlock once the money is actually paid.
+  let session: import("stripe").Stripe.Checkout.Session | null = null;
+  if (event.type === "checkout.session.completed" && event.data.object.payment_status === "paid") session = event.data.object;
+  if (event.type === "checkout.session.async_payment_succeeded") session = event.data.object;
+  if (event.type === "checkout.session.async_payment_failed") {
+    console.error("Stripe async payment failed", event.data.object.id, event.data.object.metadata?.["resultId"]);
+  }
+  if (session) {
     const resultId = session.metadata?.["resultId"];
     if (resultId) {
       const { createClient } = await import("@supabase/supabase-js");
       const admin = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!);
       const { error } = await admin.from("results").update({ is_paid: true }).eq("id", resultId);
-      if (error) console.error("Failed to mark result as paid", resultId, error);
+      if (error) {
+        // Non-2xx makes Stripe retry the webhook (for up to 3 days), so a paid result is never left locked.
+        console.error("Failed to mark result as paid", resultId, error);
+        return new Response("Could not mark result as paid", { status: 500 });
+      }
     } else {
-      console.error("Stripe checkout.session.completed event missing resultId metadata");
+      console.error("Paid Stripe checkout session missing resultId metadata", session.id);
     }
   }
 

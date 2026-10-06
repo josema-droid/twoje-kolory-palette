@@ -55,7 +55,7 @@ export function GuideCta({ title, text }: { title: string; text: string }) {
     <aside className="guide-cta">
       <h2>{title}</h2>
       <p>{text}</p>
-      <Link to="/test" className="lp-btn">Odkryj swoją paletę — 39 zł <span className="lp-btn__arrow" aria-hidden="true">➜</span></Link>
+      <Link to="/test" className="lp-btn">Odkryj swoją paletę <span className="lp-btn__arrow" aria-hidden="true">➜</span></Link>
     </aside>
   );
 }

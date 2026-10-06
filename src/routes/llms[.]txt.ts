@@ -11,7 +11,7 @@ export const Route = createFileRoute("/llms.txt")({
         const body = [
           "# Twój Color",
           "",
-          "> Personalna analiza kolorystyczna online po polsku. Użytkowniczka odpowiada na pytania o swoją naturalną urodę i dodaje jedno zdjęcie, a w około 60 sekund otrzymuje swój typ urody (jeden z 12) i osobistą paletę kolorów. Cena: 39 zł, płatność jednorazowa, bez subskrypcji.",
+          "> Personalna analiza kolorystyczna online po polsku. Dla kobiet i mężczyzn. Użytkownik odpowiada na pytania o swoją naturalną urodę i dodaje jedno zdjęcie, a w około 60 sekund otrzymuje swój typ urody (jeden z 12) i osobistą paletę kolorów. Płatność jednorazowa, bez subskrypcji; cena jest widoczna po odpowiedzi na pytania.",
           "",
           "Wynik obejmuje paletę 12–20 kolorów, 4 kolory neutralne, 3 kolory akcentowe, idealny odcień bieli i czerni (lub zamiennik), wybór między złotem a srebrem, 3–5 kolorów makijażu, rekomendacje koloru włosów, kolory, z którymi warto uważać, oraz przykładowy outfit.",
           "",

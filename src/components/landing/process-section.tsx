@@ -21,10 +21,7 @@ export function ProcessSection() {
               <article className="step__card">
                 <header className="step__head">
                   <span className="step__num">{step.number}</span>
-                  <div>
-                    <p className="step__tag">{step.tag}</p>
-                    <h3 className="step__title">{step.title}</h3>
-                  </div>
+                  <h3 className="step__title">{step.title}</h3>
                 </header>
                 <p className="step__text">{step.text}</p>
                 {step.note && <p className="step__text">{step.note}</p>}

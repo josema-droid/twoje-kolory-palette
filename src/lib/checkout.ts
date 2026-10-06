@@ -1,9 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
+import { SITE_URL } from "@/lib/seo";
 
 type CheckoutInput = { resultId: string; origin: string };
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Where Stripe may send buyers back to. Anything else (a tampered request) falls back to the main site.
+const ALLOWED_ORIGINS = [SITE_URL, "https://www.twojcolor.com", "https://twoje-kolory-palette.vercel.app", "http://localhost:8080"];
+
 export const createCheckoutSession = createServerFn({ method: "POST" })
-  .validator((data: CheckoutInput) => data)
+  .validator((data: CheckoutInput) => {
+    if (typeof data?.resultId !== "string" || !UUID.test(data.resultId)) throw new Error("Invalid result id");
+    const origin = ALLOWED_ORIGINS.includes(data.origin) ? data.origin : SITE_URL;
+    return { resultId: data.resultId, origin };
+  })
   .handler(async ({ data: { resultId, origin } }) => {
     const Stripe = (await import("stripe")).default;
     const stripe = new Stripe(process.env["STRIPE_SECRET_KEY"]!);
@@ -26,6 +35,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         },
       ],
       metadata: { resultId },
+      locale: "pl",
       success_url: `${origin}/wynik/${resultId}?paid=1`,
       cancel_url: `${origin}/wynik/${resultId}`,
     });

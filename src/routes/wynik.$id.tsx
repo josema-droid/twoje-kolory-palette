@@ -80,6 +80,7 @@ function ResultPage() {
   if (!result) return <main className="mx-auto min-h-[65vh] max-w-4xl px-5 py-20"><h1 className="font-display text-4xl">{pl.result.missing}</h1><Button asChild className="mt-8 rounded-full"><Link to="/">{pl.backHome}</Link></Button></main>;
   const t = pl.result;
   const { report } = result;
+  const male = report.gender === "male";
   return (
     <main className="pb-20">
       <section className="bg-secondary/60 px-5 py-14 text-center md:py-20">
@@ -87,7 +88,7 @@ function ResultPage() {
           <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-card text-primary"><Sparkles size={22} /></span>
           <p className="mt-6 text-xs font-bold uppercase tracking-[.2em] text-primary">{t.eyebrow}</p>
           <h1 className="mt-4 font-display text-4xl leading-tight md:text-6xl">{result.isPaid ? t.profileTitle : t.teaserHeadline}</h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground md:text-lg">{result.isPaid ? report.profile : t.teaserSubtitle}</p>
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground md:text-lg">{result.isPaid ? report.profile : male ? t.teaserSubtitleMale : t.teaserSubtitle}</p>
         </div>
       </section>
       <div className="mx-auto max-w-5xl px-5 pt-14 md:px-10 md:pt-20">
@@ -126,12 +127,25 @@ function ResultPage() {
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{report.blackAlternative.reason}</p>
               </div>
               <div>
-                <h3 className="font-display text-xl">{t.metalTitle}</h3>
+                <h3 className="font-display text-xl">{male ? t.metalTitleMale : t.metalTitle}</h3>
                 <p className="mt-2 font-medium">{report.metal.primary}{report.metal.secondary ? ` · ${report.metal.secondary}` : ""}</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{report.metal.reason}</p>
               </div>
             </section>
 
+            {report.menswear && (
+              <section className="border-t border-border pt-12">
+                <h2 className="mb-7 font-display text-3xl md:text-4xl">{t.menswearTitle}</h2>
+                <div className="space-y-10">
+                  <div><h3 className="mb-4 font-display text-xl">{t.shirtsTitle}</h3><Swatches colors={report.menswear.shirts} /></div>
+                  <div><h3 className="mb-4 font-display text-xl">{t.knitwearTitle}</h3><Swatches colors={report.menswear.knitwear} /></div>
+                  <div><h3 className="mb-4 font-display text-xl">{t.jacketsTitle}</h3><Swatches colors={report.menswear.jackets} /></div>
+                  <div><h3 className="mb-4 font-display text-xl">{t.suitsTitle}</h3><Swatches colors={report.menswear.suits} /><p className="mt-5 text-sm leading-6 text-muted-foreground">{report.menswear.suitsNote}</p></div>
+                </div>
+              </section>
+            )}
+
+            {report.makeup && (
             <section className="border-t border-border pt-12">
               <h2 className="mb-7 font-display text-3xl md:text-4xl">{t.makeupTitle}</h2>
               <Pills items={report.makeup.colors} />
@@ -143,14 +157,16 @@ function ResultPage() {
               </div>
               {report.makeup.priorityAdvice && <p className="mt-6 text-sm leading-6 text-muted-foreground">{report.makeup.priorityAdvice}</p>}
             </section>
+            )}
 
             <section className="border-t border-border pt-12">
-              <h2 className="mb-7 font-display text-3xl md:text-4xl">{t.hairTitle}</h2>
+              <h2 className="mb-7 font-display text-3xl md:text-4xl">{male ? t.hairTitleMale : t.hairTitle}</h2>
               <div className="grid gap-6 sm:grid-cols-2">
                 <div><h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.hairRecommended}</h4><div className="mt-3"><Pills items={report.hair.recommended} /></div></div>
                 <div><h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.hairAvoid}</h4><div className="mt-3"><Pills items={report.hair.avoid} /></div></div>
               </div>
               <p className="mt-6 text-sm leading-6 text-muted-foreground">{report.hair.personalizedAdvice}</p>
+              {report.hair.beardAdvice && <div className="mt-8"><h3 className="font-display text-xl">{t.beardTitle}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{report.hair.beardAdvice}</p></div>}
             </section>
 
             <section className="border-t border-border pt-12">
@@ -188,7 +204,7 @@ function ResultPage() {
             </section>
             <section className="mx-auto mt-16 max-w-xl border-t border-border pt-12 text-center">
               <h2 className="font-display text-4xl">{t.unlockTitle}</h2>
-              <p className="mt-4 leading-7 text-muted-foreground">{t.unlockText}</p>
+              <p className="mt-4 leading-7 text-muted-foreground">{male ? t.unlockTextMale : t.unlockText}</p>
               <label className="mt-8 flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card p-4 text-left">
                 <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
                 <span className="text-xs leading-5 text-muted-foreground">{t.legalConsent}</span>

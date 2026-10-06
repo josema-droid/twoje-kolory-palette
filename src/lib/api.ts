@@ -1,6 +1,7 @@
 import type { AuthError, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { buildColorReport, type ColorReport, type PhotoAnalysis } from "@/content/engine";
+import { buildColorReport, type ColorReport } from "@/content/engine";
+import { analyzeFacePhoto, type PhotoProblem } from "@/lib/photo-analysis";
 import type { Answers } from "@/content/funnel";
 import type { Result } from "@/types/result";
 
@@ -40,33 +41,39 @@ function writeLocalResultIds(ids: string[]): void {
   }
 }
 
-const TEMPERATURES: PhotoAnalysis["temperature"][] = ["chłodna", "neutralno-chłodna", "neutralna", "neutralno-ciepła", "ciepła"];
-const DEPTHS: PhotoAnalysis["depth"][] = ["jasna", "średnia", "głęboka"];
-const SATURATIONS: PhotoAnalysis["saturation"][] = ["miękka", "umiarkowana", "czysta"];
-const CONTRASTS: PhotoAnalysis["contrast"][] = ["niski", "średni", "wysoki"];
-
-function seedFrom(text: string): number {
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
-  return hash;
+/** Gemini could not use the photo (no face, too dark, …) or the analysis is down. */
+export class PhotoRejected extends Error {
+  constructor(public problem: PhotoProblem | "unavailable" | "unreadable" | "rate_limited" | "daily_limit") {
+    super(problem);
+  }
 }
 
-// PLACEHOLDER: no real photo-analysis model is wired up yet (see
-// PHOTO_ANALYZER_CONTRACT — an external analyzer should return these same
-// four fields from the actual photo). This derives a varied-but-fake profile
-// so the quiz -> report flow can be tested end to end in the meantime.
-function demoPhotoAnalysis(answers: Answers, photoFile: File): PhotoAnalysis {
-  const seed = seedFrom(JSON.stringify(answers) + photoFile.name + photoFile.size);
-  return {
-    temperature: TEMPERATURES[seed % TEMPERATURES.length]!,
-    depth: DEPTHS[(seed >> 3) % DEPTHS.length]!,
-    saturation: SATURATIONS[(seed >> 6) % SATURATIONS.length]!,
-    contrast: CONTRASTS[(seed >> 9) % CONTRASTS.length]!,
-  };
+/** Downscale to max 1024 px and re-encode as JPEG: enough for colour analysis, fast to upload. */
+async function photoToBase64Jpeg(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+  return dataUrl.slice(dataUrl.indexOf(",") + 1);
 }
 
 export async function analyzePhoto(answers: Answers, photoFile: File): Promise<Result> {
-  const photo = demoPhotoAnalysis(answers, photoFile);
+  let image: string;
+  try {
+    image = await photoToBase64Jpeg(photoFile);
+  } catch {
+    throw new PhotoRejected("unreadable");
+  }
+  const text = (id: string) => (typeof answers[id] === "string" ? (answers[id] as string) : "");
+  const response = await analyzeFacePhoto({
+    data: { image, context: { gender: text("gender"), naturalHair: text("naturalHair"), eyes: text("eyes"), currentHair: text("currentHair") || text("dyedHair") } },
+  });
+  if (!response.ok) throw new PhotoRejected(response.problem);
+  const photo = response.analysis;
   const report = buildColorReport(photo, answers);
   // The id is generated here because anonymous visitors can't read rows back
   // from the table (migration 0003); the result is then fetched via getResult.

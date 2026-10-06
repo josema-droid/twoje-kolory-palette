@@ -1,4 +1,4 @@
-import type { Answers } from "./funnel";
+import { GENDER_MALE, type Answers } from "./funnel";
 import {
   BLACK_ALTERNATIVES,
   CAUTION_LIBRARY,
@@ -34,19 +34,32 @@ export type ColorReport = {
   bestWhite: { name: string; reason: string };
   blackAlternative: { name: string; reason: string };
   metal: { primary: string; secondary: string; avoid?: string; reason: string };
-  makeup: {
+  /** Missing on reports created before the men's funnel existed (= women's report). */
+  gender?: "female" | "male" | undefined;
+  /** Women only. */
+  makeup?: {
     colors: string[];
     blush: string[];
     lips: string[];
     eyes: string[];
     bronzer: string[];
     priorityAdvice?: string | undefined;
-  };
+  } | undefined;
   hair: {
     recommended: string[];
     avoid: string[];
     personalizedAdvice: string;
+    /** Men with a beard. */
+    beardAdvice?: string | undefined;
   };
+  /** Men only: clothing-specific colour picks. */
+  menswear?: {
+    shirts: ColorRecommendation[];
+    knitwear: ColorRecommendation[];
+    jackets: ColorRecommendation[];
+    suits: ColorRecommendation[];
+    suitsNote: string;
+  } | undefined;
   cautionColors: string[];
   cautionNote: string;
   outfit: string;
@@ -95,6 +108,10 @@ function has(answers: Answers, id: string, phrase: string) {
   return list(answers, id).some((v) => v.includes(phrase));
 }
 
+function isMale(answers: Answers) {
+  return str(answers, "gender") === GENDER_MALE;
+}
+
 function ageGroup(answers: Answers) {
   const age = str(answers, "age");
   if (age.includes("25–35")) return "25-35";
@@ -119,21 +136,22 @@ function styleTags(answers: Answers): string[] {
   if (style.includes("kobiec") || style.includes("mięk")) tags.push("feminine", "soft");
   if (style.includes("klasy") || style.includes("elegan") || style.includes("formal") || style.includes("biznes")) tags.push("classic", "business");
   if (style.includes("modow") || style.includes("kreatyw")) tags.push("fashion", "bold");
-  if (style.includes("swobod") || style.includes("natural") || style.includes("codzien")) tags.push("natural", "casual");
+  if (style.includes("swobod") || style.includes("natural") || style.includes("codzien") || style.includes("sportow")) tags.push("natural", "casual");
+  if (style.includes("smart casual")) tags.push("classic", "casual");
   return tags;
 }
 
 function opennessMode(answers: Answers): "neutral" | "balanced" | "colorful" {
-  const raw = `${str(answers, "colorOpenness")} ${str(answers, "wardrobeState")}`.toLowerCase();
-  if (raw.includes("głównie w neutral") || raw.includes("klasyczne i neutralne")) return "neutral";
-  if (raw.includes("mocne") || raw.includes("bardzo lubię kolor") || raw.includes("sporo kolorów") || raw.includes("eksperyment")) return "colorful";
+  const raw = `${str(answers, "colorOpenness")} ${str(answers, "wardrobeState")} ${str(answers, "accentFocus")}`.toLowerCase();
+  if (raw.includes("głównie w neutral") || raw.includes("klasyczne i neutralne") || raw.includes("głównie na neutral")) return "neutral";
+  if (raw.includes("mocne") || raw.includes("mocniejszych") || raw.includes("bardzo lubię kolor") || raw.includes("sporo kolorów") || raw.includes("eksperyment")) return "colorful";
   return "balanced";
 }
 
 function desiredContrastBias(answers: Answers): number {
-  const raw = `${str(answers, "desiredEffect")} ${str(answers, "contrastPreference")}`.toLowerCase();
-  if (raw.includes("większy kontrast") || raw.includes("mocny i bardzo wyrazisty") || raw.includes("wyraźny i zdecydowany")) return 0.5;
-  if (raw.includes("miękki") || raw.includes("delikatnie współgra")) return -0.5;
+  const raw = `${str(answers, "desiredEffect")} ${str(answers, "contrastPreference")} ${str(answers, "imageEffect")}`.toLowerCase();
+  if (raw.includes("większy kontrast") || raw.includes("mocny i bardzo wyrazisty") || raw.includes("wyraźny i zdecydowany") || raw.includes("wyraziście") || raw.includes("wyrazistym")) return 0.5;
+  if (raw.includes("miękki") || raw.includes("delikatnie współgra") || raw === "klasycznie" || raw.includes("naturalnym")) return -0.5;
   return 0;
 }
 
@@ -432,12 +450,90 @@ function buildHair(photo: PhotoAnalysis, answers: Answers) {
     notes.push(`Jeśli zdecydujesz się na zmianę, zacznij od jednego z dwóch kierunków: ${recommended.slice(0, 2).join(" lub ")}.`);
   }
 
-  if (natural && natural !== "Trudno mi określić") notes.push(`Twój naturalny kolor (${natural.toLowerCase()}) traktujemy jako ważny punkt odniesienia dla głębi i kontrastu.`);
+  if (isMale(answers)) {
+    const warm = temperatureValue[photo.temperature] > 0;
+    if (natural.includes("Ogolona")) notes.push("Przy ogolonej głowie największą rolę w kontraście twarzy grają brwi, zarost i kolory noszone przy szyi — to na nich skupiają się rekomendacje.");
+    if (change.includes("wrócić do naturalnego")) notes.push("Powrót do naturalnego koloru najlepiej przeprowadzić stopniowo; w tym czasie wybieraj kolory przy twarzy z palety bazowej, które pasują zarówno do farbowanych, jak i odrastających włosów.");
+    if (goal.includes("Odświeżenia")) notes.push(`Dla odświeżającego efektu wybieraj odcień najwyżej o ton jaśniejszy od naturalnego, np. ${recommended[0]}.`);
+    if (goal.includes("zarostu")) notes.push("Kolor zarostu dobieraj o pół tonu jaśniej niż włosy — zbyt ciemna broda przy jaśniejszych włosach wygląda nienaturalnie.");
+    if (greyApproach.includes("podkreślić")) notes.push(warm ? "Siwienie podkreślisz, łącząc je z ciepłymi, średnio głębokimi neutralami, np. granatem z ciepłą nutą, oliwką lub camelem." : "Siwienie podkreślisz chłodnymi neutralami — grafitem, granatem i chłodną szarością — które wyglądają przy nim szlachetnie.");
+    if (greyApproach.includes("neutralizować")) notes.push("Jeśli chcesz neutralizować siwienie, unikaj tuszowania na bardzo ciemny, jednolity kolor; naturalniej wygląda delikatne przyciemnienie z zachowaniem części srebrnych pasm.");
+    if (str(answers, "greyWardrobeMatch").includes("Tak")) notes.push("Przy twarzy wybieraj kolory, które nie są ani zbyt zbliżone do odcienia włosów i zarostu, ani skrajnie od nich jaśniejsze — wtedy siwizna wygląda na zamierzoną.");
+  } else if (natural && natural !== "Trudno mi określić") {
+    notes.push(`Twój naturalny kolor (${natural.toLowerCase()}) traktujemy jako ważny punkt odniesienia dla głębi i kontrastu.`);
+  }
 
   return {
     recommended: recommended.slice(0, 5),
     avoid: avoid.slice(0, 3),
     personalizedAdvice: notes.join(" ") || "Trzymaj się temperatury i głębi zgodnej z Twoim profilem; największą różnicę robi odcień przy twarzy, nie sama nazwa koloru na opakowaniu.",
+    beardAdvice: beardAdvice(photo, answers),
+  };
+}
+
+function beardAdvice(photo: PhotoAnalysis, answers: Answers): string | undefined {
+  const beard = str(answers, "beard");
+  if (!isMale(answers) || !beard || beard.startsWith("Nie")) return undefined;
+  const color = str(answers, "beardColor").toLowerCase();
+  const diff = str(answers, "beardContrast");
+  const warm = temperatureValue[photo.temperature] > 0;
+  const notes = ["Zarost jest częścią kontrastu Twojej twarzy, więc kolory przy szyi i kołnierzu powinny z nim współgrać."];
+  if (color.includes("siw")) {
+    notes.push(warm
+      ? "Siwy zarost przy Twojej ciepłej kolorystyce najlepiej równoważą ciepłe neutrale: granat z ciepłą nutą, oliwka i camel."
+      : "Siwy zarost świetnie wygląda z chłodnymi neutralami — granatem, grafitem i chłodnym błękitem.");
+  } else if (color.includes("rud") || diff.includes("rudy")) {
+    notes.push("Rudawy lub ciepły zarost podkreślą oliwka, butelkowa zieleń i granat; unikaj przy twarzy jaskrawego pomarańczu i różu, które go wyostrzają.");
+  } else if (color.includes("czarny") || color.includes("ciemny")) {
+    notes.push("Ciemny zarost zwiększa kontrast twarzy, więc dobrze znosi zdecydowane kolory; zbyt jasne pastele przy twarzy mogą go przytłoczyć.");
+  } else if (color.includes("blond") || diff.includes("jaśniejszy")) {
+    notes.push("Jasny zarost jest subtelny, więc najlepiej wyglądają przy nim kolory o średniej głębi; bardzo ciemne kołnierze mogą go „zgasić”.");
+  }
+  if (diff.includes("jaśniejszy") || diff.includes("ciemniejszy")) notes.push("Gdy zarost różni się od włosów, kolor koszuli lub swetra dobieraj do zarostu — jest bliżej twarzy.");
+  return notes.join(" ");
+}
+
+// Suit colours: always classic menswear shades, chosen by temperature and depth.
+const SUITS: Record<"cool" | "warm" | "neutral", ColorRecommendation[]> = {
+  cool: [{ name: "granat", hex: "#1F2A44" }, { name: "grafit", hex: "#3A3F47" }, { name: "chłodny średni szary", hex: "#7E848D" }, { name: "niebieskoszary", hex: "#5D6F86" }],
+  warm: [{ name: "granat z ciepłą nutą", hex: "#2A3346" }, { name: "czekoladowy brąz", hex: "#4E3427" }, { name: "oliwkowa zieleń", hex: "#5B5A3C" }, { name: "camel", hex: "#B08A5E" }],
+  neutral: [{ name: "granat", hex: "#22304A" }, { name: "średni szary", hex: "#7B7D80" }, { name: "taupe", hex: "#8C8079" }, { name: "ciemny brąz", hex: "#5C4A3D" }],
+};
+
+function buildMenswear(photo: PhotoAnalysis, answers: Answers, accents: ColorEntry[], white: { name: string }) {
+  const t = temperatureValue[photo.temperature];
+  const family = t > 0 ? "warm" : t < 0 ? "cool" : "neutral";
+  let suits = [...SUITS[family]];
+  if (photo.depth === "jasna") suits = [suits[0]!, suits[3]!, suits[2]!];
+  else suits = suits.slice(0, 3);
+  const blackOk = photo.depth === "głęboka" && photo.contrast === "wysoki" && t <= 0;
+  if (blackOk) suits[2] = { name: "czerń (na wieczorne okazje)", hex: "#16161A" };
+
+  // Each garment group is picked from the whole library ranked for this person, so every
+  // group has enough candidates even when the 16-colour palette is mostly deep or light.
+  const ranked = COLOR_LIBRARY
+    .map((c) => ({ c, score: colorScore(c, photo, answers, "palette") }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.c);
+  const pick = (list: ColorEntry[], n: number) => list.slice(0, n).map(({ name, hex }) => ({ name, hex }));
+  const lightNeutrals = ranked.filter((c) => c.depth === 1 && c.role !== "accent");
+  const lightColours = ranked.filter((c) => c.depth === 1 && c.role === "accent");
+  const shirts = [...lightNeutrals.slice(0, 3), ...lightColours.slice(0, 1), ...lightNeutrals.slice(3)];
+  const knitwear = [...accents.filter((c) => c.depth === 2), ...ranked.filter((c) => c.depth === 2)].filter((c, i, l) => l.findIndex((x) => x.name === c.name) === i);
+  const jackets = [...ranked.filter((c) => c.depth === 3 && c.role !== "accent"), ...ranked.filter((c) => c.depth === 2 && c.role === "neutral")];
+
+  const owned = list(answers, "suitColors");
+  const notes = [`Najbardziej uniwersalny będzie garnitur w kolorze: ${suits[0]!.name}. Do niego koszula w odcieniu: ${white.name}, a krawat lub poszetka w kolorze akcentowym: ${accents[0]?.name ?? "z Twojej palety"}.`];
+  if (owned.includes("Czarny") && !blackOk) notes.push("Czarny garnitur zostaw na wieczorne okazje — przy Twojej kolorystyce na co dzień lepiej sprawdzą się powyższe odcienie.");
+  if (owned.includes("Nie mam jeszcze garnituru")) notes.push(`Jeśli kupujesz pierwszy garnitur, wybierz ${suits[0]!.name} — sprawdzi się na większość okazji.`);
+  if (str(answers, "formalProblem").includes("Krawat")) notes.push(`Krawaty wybieraj w kolorach akcentowych z palety (${accents.slice(0, 2).map((c) => c.name).join(", ")}), najlepiej matowe lub w drobny wzór.`);
+
+  return {
+    shirts: pick(shirts, 4),
+    knitwear: pick(knitwear, 4),
+    jackets: pick(jackets, 3),
+    suits,
+    suitsNote: notes.join(" "),
   };
 }
 
@@ -456,7 +552,9 @@ function buildCautionColors(photo: PhotoAnalysis, answers: Answers) {
   const badEffect = str(answers, "badColorEffect");
   const desired = str(answers, "desiredEffect");
 
-  let note = "Nie są to kolory zakazane. Jeśli je lubisz, noś je dalej od twarzy — np. w spodniach, butach, torebkach lub małych dodatkach.";
+  let note = isMale(answers)
+    ? "Nie są to kolory zakazane. Jeśli je lubisz, noś je dalej od twarzy — np. w spodniach, butach, paskach lub małych dodatkach."
+    : "Nie są to kolory zakazane. Jeśli je lubisz, noś je dalej od twarzy — np. w spodniach, butach, torebkach lub małych dodatkach.";
   if (badEffect.includes("cienie") || desired.includes("cienie")) note = `Szczególnie obserwuj, czy te odcienie nie wzmacniają cieni pod oczami. ${note}`;
   if (badEffect.includes("zaczerwien") || desired.includes("zaczerwien")) note = `Szczególnie obserwuj, czy te odcienie nie wzmacniają zaczerwienień skóry. ${note}`;
   if (badEffect.includes("szar") || badEffect.includes("zmęcz")) note = `Największym sygnałem ostrzegawczym będzie efekt szarej lub zmęczonej cery. ${note}`;
@@ -482,6 +580,27 @@ function outfitGarments(answers: Answers) {
   if (combined.includes("sukienki")) return ["sukienka", "marynarka lub kardigan", "buty", "biżuteria"];
   if (combined.includes("płaszcze") || combined.includes("kurtki")) return ["spodnie", "top", "płaszcz lub kurtka", "szal"];
   return ["spodnie lub jeansy", "top", "dodatkowa warstwa", "torebka lub buty"];
+}
+
+function buildMenOutfit(base: ColorEntry[], accents: ColorEntry[], white: { name: string }, metal: ColorReport["metal"], suit: string, answers: Answers) {
+  const occasion = `${str(answers, "outfit")} ${str(answers, "goal")}`.toLowerCase();
+  const accent = accents[0]?.name ?? "kolor akcentowy z Twojej palety";
+  const b1 = base[0]?.name ?? "głęboki neutral";
+  const b2 = base[1]?.name ?? "drugi neutral";
+  const watch = `zegarek: ${metal.primary}`;
+  if (occasion.includes("formaln") || occasion.includes("garnitur")) {
+    return `Garnitur w kolorze: ${suit}; koszula w odcieniu: ${white.name}; krawat lub poszetka w kolorze: ${accent}; buty i pasek w kolorze: ${b1}; ${watch}.`;
+  }
+  if (occasion.includes("pracy")) {
+    return `Spodnie w kolorze: ${b1}; koszula w odcieniu: ${white.name}; marynarka w kolorze: ${b2}; akcent (krawat, poszetka lub sweter) w kolorze: ${accent}; ${watch}.`;
+  }
+  if (occasion.includes("randk") || occasion.includes("wieczor") || occasion.includes("wyjś")) {
+    return `Ciemne jeansy lub chinosy w kolorze: ${b1}; koszula lub dzianinowa koszulka polo w kolorze: ${accent}; marynarka lub kurtka w kolorze: ${b2}; ${watch}.`;
+  }
+  if (occasion.includes("zdjęć") || occasion.includes("wizerun") || occasion.includes("wystąpień")) {
+    return `Koszula lub sweter w jednolitym kolorze: ${accent} (bez drobnych wzorów, które migoczą w kamerze); marynarka w kolorze: ${b1}; spodnie w kolorze: ${b2}.`;
+  }
+  return `Jeansy lub chinosy w kolorze: ${b1}; T-shirt w odcieniu: ${white.name}; sweter lub koszula w kolorze: ${accent}; kurtka w kolorze: ${b2}; ${watch}.`;
 }
 
 function buildOutfit(base: ColorEntry[], accents: ColorEntry[], white: { name: string }, metal: ColorReport["metal"], answers: Answers) {
@@ -534,6 +653,7 @@ function personalizationNotes(answers: Answers) {
   if (list(answers, "makeupProblem").length) notes.push(`Priorytet makijażowy: ${list(answers, "makeupProblem").join(", ")}.`);
   if (str(answers, "hairGoal") || str(answers, "hairEffect")) notes.push(`Cel dotyczący włosów: ${str(answers, "hairGoal") || str(answers, "hairEffect")}.`);
   if (str(answers, "greyHairApproach")) notes.push(`Podejście do siwienia: ${str(answers, "greyHairApproach")}.`);
+  if (str(answers, "beard")) notes.push(`Zarost: ${str(answers, "beard")}${str(answers, "beardColor") ? ` (${str(answers, "beardColor").toLowerCase()})` : ""}.`);
   return notes;
 }
 
@@ -545,12 +665,16 @@ export function buildColorReport(photo: PhotoAnalysis, answers: Answers): ColorR
   const bestWhite = chooseWhite(photo, answers);
   const blackAlternative = chooseBlackAlternative(photo, answers);
   const metal = chooseMetal(photo, answers);
-  const makeup = buildMakeup(photo, answers);
+  const male = isMale(answers);
+  const makeup = male ? undefined : buildMakeup(photo, answers);
   const hair = buildHair(photo, answers);
   const caution = buildCautionColors(photo, answers);
+  const menswear = male ? buildMenswear(photo, answers, accents, bestWhite) : undefined;
 
   const age = ageGroup(answers);
-  const ageContext = age === "25-35" ? "Twoje odpowiedzi zostały wykorzystane głównie do personalizacji stylu, zakupów, makijażu i włosów."
+  const ageContext = male
+    ? `Twoje odpowiedzi zostały wykorzystane do dopasowania kolorów do Twojej garderoby, zarostu i głównego celu: ${str(answers, "goal").toLowerCase() || "cała paleta"}.`
+    : age === "25-35" ? "Twoje odpowiedzi zostały wykorzystane głównie do personalizacji stylu, zakupów, makijażu i włosów."
     : age === "36-55" ? "Twoje odpowiedzi zostały wykorzystane do połączenia kolorystyki z garderobą, pracą, makijażem i włosami."
     : "Twoje odpowiedzi zostały wykorzystane do dopasowania kolorów do obecnego kontrastu, garderoby, makijażu i ewentualnego siwienia włosów.";
 
@@ -563,11 +687,13 @@ export function buildColorReport(photo: PhotoAnalysis, answers: Answers): ColorR
     bestWhite,
     blackAlternative,
     metal,
+    gender: male ? "male" : "female",
     makeup,
     hair,
+    menswear,
     cautionColors: caution.colors,
     cautionNote: caution.note,
-    outfit: buildOutfit(base, accents, bestWhite, metal, answers),
+    outfit: male && menswear ? buildMenOutfit(base, accents, bestWhite, metal, menswear.suits[0]!.name, answers) : buildOutfit(base, accents, bestWhite, metal, answers),
     personalizationNotes: personalizationNotes(answers),
   };
 }
