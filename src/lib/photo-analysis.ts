@@ -96,41 +96,47 @@ export const analyzeFacePhoto = createServerFn({ method: "POST" })
     const limit = await checkAndRecordAnalysis(getRequestIP({ xForwardedFor: true }));
     if (limit !== "ok") return { ok: false, problem: limit };
 
-    const model = process.env["GEMINI_MODEL"] || "gemini-3.8-flash";
-    let response: Response;
-    try {
-      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ inline_data: { mime_type: "image/jpeg", data: data.image } }, { text: prompt(data.context) }] }],
-          generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.2 },
-        }),
-        signal: AbortSignal.timeout(45_000),
-      });
-    } catch (error) {
-      console.error("Gemini request failed", error);
-      return { ok: false, problem: "unavailable" };
-    }
+    // Primary model, then a faster fallback if Google is overloaded (503/429), errors or is slow.
+    // Benchmarked Oct 2026: gemini-3.5-flash ~4 s and matches the newest model; 3.8-flash took 45-60 s.
+    const models = [process.env["GEMINI_MODEL"] || "gemini-3.5-flash", process.env["GEMINI_FALLBACK_MODEL"] || "gemini-3.1-flash-lite"];
+    const body = JSON.stringify({
+      contents: [{ role: "user", parts: [{ inline_data: { mime_type: "image/jpeg", data: data.image } }, { text: prompt(data.context) }] }],
+      generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.2, thinkingConfig: { thinkingLevel: "low" } },
+    });
 
-    if (!response.ok) {
-      console.error("Gemini error", response.status, (await response.text()).slice(0, 500));
-      return { ok: false, problem: "unavailable" };
-    }
+    for (const model of models) {
+      let response: Response;
+      try {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+          body,
+          signal: AbortSignal.timeout(20_000),
+        });
+      } catch (error) {
+        console.error(`Gemini request failed (${model})`, error);
+        continue;
+      }
 
-    try {
-      const body = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-      const text = body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-      const out = JSON.parse(text) as Record<string, unknown>;
-      if (out["usable"] === false) {
-        return { ok: false, problem: oneOf(PROBLEMS, out["problem"]) ? out["problem"] : "no_face" };
+      if (!response.ok) {
+        console.error(`Gemini error (${model})`, response.status, (await response.text()).slice(0, 300));
+        continue;
       }
-      if (oneOf(TEMPERATURES, out["temperature"]) && oneOf(DEPTHS, out["depth"]) && oneOf(SATURATIONS, out["saturation"]) && oneOf(CONTRASTS, out["contrast"])) {
-        return { ok: true, analysis: { temperature: out["temperature"], depth: out["depth"], saturation: out["saturation"], contrast: out["contrast"] } };
+
+      try {
+        const json = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+        const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+        const out = JSON.parse(text) as Record<string, unknown>;
+        if (out["usable"] === false) {
+          return { ok: false, problem: oneOf(PROBLEMS, out["problem"]) ? out["problem"] : "no_face" };
+        }
+        if (oneOf(TEMPERATURES, out["temperature"]) && oneOf(DEPTHS, out["depth"]) && oneOf(SATURATIONS, out["saturation"]) && oneOf(CONTRASTS, out["contrast"])) {
+          return { ok: true, analysis: { temperature: out["temperature"], depth: out["depth"], saturation: out["saturation"], contrast: out["contrast"] } };
+        }
+        console.error(`Gemini returned unexpected values (${model})`, text.slice(0, 300));
+      } catch (error) {
+        console.error(`Could not parse Gemini response (${model})`, error);
       }
-      console.error("Gemini returned unexpected values", text.slice(0, 300));
-    } catch (error) {
-      console.error("Could not parse Gemini response", error);
     }
     return { ok: false, problem: "unavailable" };
   });
