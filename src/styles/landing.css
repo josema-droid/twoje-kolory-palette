@@ -670,7 +670,7 @@ html { scroll-padding-top: calc(var(--header-h) + 16px); }
   /* ---------- Responsive ---------- */
   @media (max-width: 1099px) {
     .includes__grid { padding-right: var(--lp-gutter); }
-    .result__grid { grid-template-columns: 1fr; }
+    .result__grid { grid-template-columns: 1fr; padding-inline: var(--lp-gutter); }
     .result__text .cta-block { order: 1; padding-bottom: 0; }
     .report { max-width: 720px; margin-inline: auto; width: 100%; }
   }
@@ -716,6 +716,8 @@ html { scroll-padding-top: calc(var(--header-h) + 16px); }
     .report__palette { gap: 6px; }
     .report__tiles { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; }
     .tile__title { white-space: normal; }
+    .tile--jewelry img { margin-top: 0; }
+    .tile--jewelry .tile__foot { padding-top: 6px; }
     .compare-card { padding: 18px; }
     .fabrics { width: 52px; }
     .pros-cons { padding-left: 0; }

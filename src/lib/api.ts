@@ -49,14 +49,28 @@ export class PhotoRejected extends Error {
 }
 
 /** Downscale to max 1024 px and re-encode as JPEG: enough for colour analysis, fast to upload. */
+async function decodeImage(file: File): Promise<{ source: CanvasImageSource; width: number; height: number; release: () => void }> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    return { source: bitmap, width: bitmap.width, height: bitmap.height, release: () => bitmap.close() };
+  } catch {
+    // Safari can't always decode iPhone HEIC photos with createImageBitmap, but an <img> can.
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    return { source: img, width: img.naturalWidth, height: img.naturalHeight, release: () => URL.revokeObjectURL(url) };
+  }
+}
+
 async function photoToBase64Jpeg(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height));
+  const image = await decodeImage(file);
+  const scale = Math.min(1, 1024 / Math.max(image.width, image.height));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+  canvas.getContext("2d")!.drawImage(image.source, 0, 0, canvas.width, canvas.height);
+  image.release();
   const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
   return dataUrl.slice(dataUrl.indexOf(",") + 1);
 }
