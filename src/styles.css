@@ -150,3 +150,27 @@
 @keyframes soft-pulse { 0%, 100% { transform: scale(.92); opacity: .55; } 50% { transform: scale(1.12); opacity: 1; } }
 .analysis-pulse { animation: soft-pulse 2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .analysis-pulse { animation: none; } }
+
+/* ---------- Funnel checkpoints (src/components/funnel/checkpoint.tsx) ---------- */
+@keyframes cp-pop { 0% { transform: scale(.6); opacity: 0; } 70% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes cp-draw { to { stroke-dashoffset: 0; } }
+@keyframes cp-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes cp-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 35%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.cp { animation: cp-rise .4s ease-out both; }
+.cp-badge { width: 60px; height: 60px; margin-inline: auto; animation: cp-pop .55s cubic-bezier(.2, .8, .2, 1.2) both; }
+.cp-badge svg { width: 100%; height: 100%; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.cp-badge__ring { stroke: var(--primary); stroke-width: 2; opacity: .25; }
+.cp-badge__check { stroke: var(--primary); stroke-width: 3.5; stroke-dasharray: 40; stroke-dashoffset: 40; animation: cp-draw .5s .35s ease-out forwards; }
+.cp-fade, .cp-check-item { opacity: 0; animation: cp-rise .5s ease-out forwards; animation-delay: var(--d, 0ms); }
+.cp-feature { display: grid; justify-items: center; gap: 4px; font-size: .875rem; }
+.cp-feature span { width: 56px; height: 56px; margin-bottom: 4px; border-radius: 50%; box-shadow: 0 0 0 3px var(--card), 0 0 0 4px var(--border), 0 4px 12px rgb(0 0 0 / .12); animation: cp-pop .6s .6s cubic-bezier(.2, .8, .2, 1.2) both; }
+.cp-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--border); transition: background-color .3s; }
+.cp-dot.is-on { background: var(--c); }
+.cp-dot.is-new { animation: cp-pop .5s cubic-bezier(.2, .8, .2, 1.2) both; animation-delay: var(--d, 0ms); }
+.cp-bar { background: linear-gradient(90deg, #e3ba7a, #e0475e 55%, var(--primary)); transition: width 1.2s cubic-bezier(.25, .8, .25, 1); }
+.cp-pending { animation: cp-pulse 1.6s ease-in-out infinite; }
+@media (min-width: 768px) { .cp-badge { width: 76px; height: 76px; } }
+@media (prefers-reduced-motion: reduce) {
+  .cp, .cp-badge, .cp-badge__check, .cp-fade, .cp-check-item, .cp-feature span, .cp-dot.is-new, .cp-pending { animation: none; opacity: 1; stroke-dashoffset: 0; }
+  .cp-bar { transition: none; }
+}

@@ -76,7 +76,18 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
     if (resultId) {
       const { createClient } = await import("@supabase/supabase-js");
       const admin = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!);
-      const { error } = await admin.from("results").update({ is_paid: true }).eq("id", resultId);
+      const consentAt = session.metadata?.["consentAt"] ?? null;
+      let { error } = await admin.from("results").update({
+        is_paid: true,
+        paid_at: new Date((event.created ?? Date.now() / 1000) * 1000).toISOString(),
+        stripe_session_id: session.id,
+        customer_email: session.customer_details?.email ?? null,
+        terms_accepted_at: consentAt,
+        withdrawal_waiver_at: consentAt,
+        terms_version: session.metadata?.["termsVersion"] ?? null,
+      }).eq("id", resultId);
+      // TEMPORARY: order columns missing until migration 0008 is applied — still unlock the result.
+      if (error?.code === "PGRST204") ({ error } = await admin.from("results").update({ is_paid: true }).eq("id", resultId));
       if (error) {
         // Non-2xx makes Stripe retry the webhook (for up to 3 days), so a paid result is never left locked.
         console.error("Failed to mark result as paid", resultId, error);

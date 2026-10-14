@@ -14,6 +14,7 @@ import {
 import type { Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
 import { seo } from "@/lib/seo";
+import { Checkpoint } from "@/components/funnel/checkpoint";
 
 export const Route = createFileRoute("/test")({
   head: () => seo({ title: "Test kolorystyczny online — sprawdź swój typ urody", description: "Odpowiedz na kilka pytań o swoją naturalną urodę — to pierwszy krok personalnej analizy kolorystycznej Twój Color.", path: "/test" }),
@@ -26,6 +27,9 @@ function QuizPage() {
   const [questionId, setQuestionId] = useState(() => firstQuestionId({}));
   const [multiSelection, setMultiSelection] = useState<string[]>([]);
   const advancing = useRef(false);
+  // Checkpoint screen between questions; each one is shown once, even after going back.
+  const [checkpoint, setCheckpoint] = useState<{ step: 1 | 2 | 3; next: string | null; answers: Answers } | null>(null);
+  const shownCheckpoints = useRef(new Set<number>());
 
   useEffect(() => {
     trackEvent("QuizStart");
@@ -43,10 +47,7 @@ function QuizPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionId]);
 
-  if (!question) return null;
-
-  const goToNext = (nextAnswers: Answers) => {
-    const next = nextQuestionId(questionId, nextAnswers);
+  const proceed = (next: string | null, nextAnswers: Answers) => {
     if (next) {
       setQuestionId(next);
       return;
@@ -54,6 +55,41 @@ function QuizPage() {
     sessionStorage.setItem("twoje-kolory-answers", JSON.stringify(nextAnswers));
     trackEvent("QuizComplete", { answers: Object.keys(nextAnswers).length });
     navigate({ to: "/zdjecie" });
+  };
+
+  if (checkpoint) {
+    return (
+      <main className="min-h-[calc(100vh-4.5rem)] bg-secondary/35 px-5 py-10 md:py-16">
+        <Checkpoint
+          key={checkpoint.step}
+          step={checkpoint.step}
+          answers={checkpoint.answers}
+          onContinue={() => {
+            const { next, answers: nextAnswers } = checkpoint;
+            setCheckpoint(null);
+            window.scrollTo({ top: 0 });
+            proceed(next, nextAnswers);
+          }}
+        />
+      </main>
+    );
+  }
+
+  if (!question) return null;
+
+  const goToNext = (nextAnswers: Answers) => {
+    const next = nextQuestionId(questionId, nextAnswers);
+    // Checkpoints: 1 after goals/style (before the natural colouring), 2 after hair and eyes
+    // (before jewellery for women, before white for men), 3 at the end before the photo.
+    const step = !next ? 3 : next === "naturalHair" ? 1 : (next === "jewelry" || next === "white") && shownCheckpoints.current.has(1) ? 2 : null;
+    if (step && !shownCheckpoints.current.has(step)) {
+      shownCheckpoints.current.add(step);
+      trackEvent("QuizCheckpoint", { step });
+      setCheckpoint({ step, next, answers: nextAnswers });
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    proceed(next, nextAnswers);
   };
 
   const selectSingle = (value: string) => {

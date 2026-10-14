@@ -90,7 +90,7 @@ function SeasonPage({ season }: { season: SeasonGuide }) {
           </nav>
         </GuideSection>
 
-        <GuideCta title={`Czy Twoja pora roku to ${season.label.toLowerCase()}?`} text="Odpowiedz na kilka pytań, dodaj zdjęcie i w około 60 sekund poznaj swój typ urody oraz pełną paletę kolorów." />
+        <GuideCta title={`Czy Twoja pora roku to ${season.label.toLowerCase()}?`} text="Odpowiedz na kilka pytań, dodaj zdjęcie i poznaj swój typ urody oraz pełną paletę kolorów." />
       </div>
     </main>
   );

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { PhotoAnalysis } from "@/content/engine";
+import { isHex } from "@/lib/color";
 
 // Photo → the four colour parameters the report engine needs, using Gemini.
 // Runs on the server only: the API key never reaches the browser, and the photo
@@ -31,9 +32,15 @@ const responseSchema = {
     depth: { type: "STRING", enum: [...DEPTHS] },
     saturation: { type: "STRING", enum: [...SATURATIONS] },
     contrast: { type: "STRING", enum: [...CONTRASTS] },
+    eyeHex: { type: "STRING", description: "average iris colour as #rrggbb (not pupil, not eye whites)" },
+    eyeName: { type: "STRING", description: "eye colour in Polish, 1-3 words, e.g. 'szaroniebieskie'" },
+    hairHex: { type: "STRING", description: "dominant natural hair colour as #rrggbb (mid-lengths, not highlights or shadows)" },
+    hairName: { type: "STRING", description: "hair colour in Polish, 1-3 words, e.g. 'ciemny blond'" },
+    skinHex: { type: "STRING", description: "skin colour as #rrggbb, sampled from forehead/jaw in even light, without blush" },
+    skinName: { type: "STRING", description: "skin tone in Polish, 1-4 words, e.g. 'jasna, ciepła beżowa'" },
   },
-  required: ["usable", "problem", "temperature", "depth", "saturation", "contrast"],
-  propertyOrdering: ["usable", "problem", "temperature", "depth", "saturation", "contrast"],
+  required: ["usable", "problem", "temperature", "depth", "saturation", "contrast", "eyeHex", "eyeName", "hairHex", "hairName", "skinHex", "skinName"],
+  propertyOrdering: ["usable", "problem", "temperature", "depth", "saturation", "contrast", "eyeHex", "eyeName", "hairHex", "hairName", "skinHex", "skinName"],
 };
 
 function prompt(ctx: Input["context"]) {
@@ -46,6 +53,7 @@ Return:
 - depth (overall value of skin + hair + eyes together): jasna (light), średnia (medium), głęboka (deep).
 - saturation (chroma of the natural colouring): miękka (soft, muted, greyed), umiarkowana (moderate), czysta (clear, bright).
 - contrast (difference in value between hair/brows, eyes and skin): niski, średni, wysoki.
+- eyeHex/hairHex/skinHex: the colours as they would look in neutral daylight (correct for the light's colour cast), with short Polish names.
 
 Self-reported context from the quiz (use as a hint; the photo has priority, and dyed hair must not decide the result):
 - analysis for: ${ctx.gender || "unknown"}
@@ -147,7 +155,15 @@ export const analyzeFacePhoto = createServerFn({ method: "POST" })
           return { ok: false, problem: oneOf(PROBLEMS, out["problem"]) ? out["problem"] : "no_face" };
         }
         if (oneOf(TEMPERATURES, out["temperature"]) && oneOf(DEPTHS, out["depth"]) && oneOf(SATURATIONS, out["saturation"]) && oneOf(CONTRASTS, out["contrast"])) {
-          return { ok: true, analysis: { temperature: out["temperature"], depth: out["depth"], saturation: out["saturation"], contrast: out["contrast"] } };
+          // Feature colours are optional extras: invalid ones are dropped and the quiz answers fill in.
+          const feature = (hex: unknown, name: unknown) =>
+            isHex(hex) ? { hex: hex.toLowerCase(), name: typeof name === "string" ? name.slice(0, 40).toLowerCase() : "" } : undefined;
+          const features = {
+            eyes: feature(out["eyeHex"], out["eyeName"]),
+            hair: feature(out["hairHex"], out["hairName"]),
+            skin: feature(out["skinHex"], out["skinName"]),
+          };
+          return { ok: true, analysis: { temperature: out["temperature"], depth: out["depth"], saturation: out["saturation"], contrast: out["contrast"], features } };
         }
         console.error(`Gemini returned unexpected values (${model})`, text.slice(0, 300));
       } catch (error) {

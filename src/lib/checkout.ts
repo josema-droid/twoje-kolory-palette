@@ -1,7 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { SITE_URL } from "@/lib/seo";
 
-type CheckoutInput = { resultId: string; origin: string };
+type CheckoutInput = { resultId: string; origin: string; acceptedTerms: boolean; waivedWithdrawal: boolean };
+
+// Bump when the Regulamin changes, so each order records which version was accepted.
+export const TERMS_VERSION = "1.0";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Where Stripe may send buyers back to. Anything else (a tampered request) falls back to the main site.
@@ -10,6 +13,8 @@ const ALLOWED_ORIGINS = [SITE_URL, "https://www.twojcolor.com", "https://twoje-k
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .validator((data: CheckoutInput) => {
     if (typeof data?.resultId !== "string" || !UUID.test(data.resultId)) throw new Error("Invalid result id");
+    // Both checkboxes are required before paying; the webhook stores them as proof.
+    if (data.acceptedTerms !== true || data.waivedWithdrawal !== true) throw new Error("Consents required");
     const origin = ALLOWED_ORIGINS.includes(data.origin) ? data.origin : SITE_URL;
     return { resultId: data.resultId, origin };
   })
@@ -34,7 +39,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           quantity: 1,
         },
       ],
-      metadata: { resultId },
+      metadata: { resultId, consentAt: new Date().toISOString(), termsVersion: TERMS_VERSION },
       locale: "pl",
       success_url: `${origin}/wynik/${resultId}?paid=1`,
       cancel_url: `${origin}/wynik/${resultId}`,

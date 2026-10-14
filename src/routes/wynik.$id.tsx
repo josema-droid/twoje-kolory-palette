@@ -11,6 +11,7 @@ import { trackEvent } from "@/lib/tracking";
 import type { ColorRecommendation } from "@/content/engine";
 import type { Result } from "@/types/result";
 import { seo } from "@/lib/seo";
+import { ResultDashboard } from "@/components/dashboard/result-dashboard";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -48,6 +49,7 @@ function ResultPage() {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(true);
   const [consent, setConsent] = useState(false);
+  const [terms, setTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [downloadNote, setDownloadNote] = useState(false);
   const user = useAuthUser();
@@ -71,9 +73,9 @@ function ResultPage() {
     return () => { active = false; };
   }, [id]);
   const unlock = async () => {
-    if (!consent || !result) return;
+    if (!consent || !terms || !result) return;
     setBusy(true); trackEvent("InitiateCheckout", { resultId: result.id });
-    const { url } = await createCheckoutSession({ data: { resultId: result.id, origin: window.location.origin } });
+    const { url } = await createCheckoutSession({ data: { resultId: result.id, origin: window.location.origin, acceptedTerms: terms, waivedWithdrawal: consent } });
     window.location.href = url;
   };
   if (loading) return <main className="flex min-h-[65vh] items-center justify-center font-display text-3xl">{pl.result.loading}</main>;
@@ -81,6 +83,33 @@ function ResultPage() {
   const t = pl.result;
   const { report } = result;
   const male = report.gender === "male";
+  const account = (
+    <>
+        {user === null && !result.userId && (
+          <section className="mx-auto mt-16 max-w-xl rounded-lg border border-border bg-secondary/55 p-6 text-center md:p-8">
+            <h2 className="font-display text-3xl">{t.saveTitle}</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">{t.saveText}</p>
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button asChild className="h-12 rounded-full px-7"><Link to="/rejestracja" search={{ redirect: `/wynik/${result.id}` }}>{t.saveSignup}<ArrowRight size={16} /></Link></Button>
+              <Button asChild variant="outline" className="h-12 rounded-full border-primary/30 px-7 text-primary"><Link to="/logowanie" search={{ redirect: `/wynik/${result.id}` }}>{t.saveLogin}</Link></Button>
+            </div>
+          </section>
+        )}
+        {user && result.userId === user.id && (
+          <p className="mt-16 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+            <Check size={16} className="text-primary" />{t.saved} <Link to="/moje-wyniki" className="font-semibold text-primary hover:underline">{t.savedLink}</Link>
+          </p>
+        )}
+    </>
+  );
+  if (result.isPaid && report.dashboard) {
+    return (
+      <>
+        <ResultDashboard report={report} dashboard={report.dashboard} />
+        <div className="mx-auto max-w-5xl px-5 pb-20 md:px-10">{account}</div>
+      </>
+    );
+  }
   return (
     <main className="pb-20">
       <section className="bg-secondary/60 px-5 py-14 text-center md:py-20">
@@ -205,29 +234,23 @@ function ResultPage() {
             <section className="mx-auto mt-16 max-w-xl border-t border-border pt-12 text-center">
               <h2 className="font-display text-4xl">{t.unlockTitle}</h2>
               <p className="mt-4 leading-7 text-muted-foreground">{male ? t.unlockTextMale : t.unlockText}</p>
-              <label className="mt-8 flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card p-4 text-left">
+              <label className="mt-8 flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-left">
+                <Checkbox checked={terms} onCheckedChange={(v) => setTerms(v === true)} />
+                <span className="text-xs leading-5 text-muted-foreground">
+                  {t.termsBefore}
+                  {/* New tab, so the result page stays open. */}
+                  <a href="/regulamin" target="_blank" rel="noopener" className="font-medium text-primary underline underline-offset-2">{t.termsLink}</a>
+                </span>
+              </label>
+              <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card p-4 text-left">
                 <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
                 <span className="text-xs leading-5 text-muted-foreground">{t.legalConsent}</span>
               </label>
-              <Button className="mt-5 h-14 w-full rounded-full text-base" disabled={!consent || busy} onClick={unlock}>{t.unlock}<ArrowRight size={17} /></Button>
+              <Button className="mt-5 h-14 w-full rounded-full text-base" disabled={!consent || !terms || busy} onClick={unlock}>{t.unlock}<ArrowRight size={17} /></Button>
             </section>
           </>
         )}
-        {user === null && !result.userId && (
-          <section className="mx-auto mt-16 max-w-xl rounded-lg border border-border bg-secondary/55 p-6 text-center md:p-8">
-            <h2 className="font-display text-3xl">{t.saveTitle}</h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">{t.saveText}</p>
-            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button asChild className="h-12 rounded-full px-7"><Link to="/rejestracja" search={{ redirect: `/wynik/${result.id}` }}>{t.saveSignup}<ArrowRight size={16} /></Link></Button>
-              <Button asChild variant="outline" className="h-12 rounded-full border-primary/30 px-7 text-primary"><Link to="/logowanie" search={{ redirect: `/wynik/${result.id}` }}>{t.saveLogin}</Link></Button>
-            </div>
-          </section>
-        )}
-        {user && result.userId === user.id && (
-          <p className="mt-16 flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
-            <Check size={16} className="text-primary" />{t.saved} <Link to="/moje-wyniki" className="font-semibold text-primary hover:underline">{t.savedLink}</Link>
-          </p>
-        )}
+        {account}
       </div>
     </main>
   );

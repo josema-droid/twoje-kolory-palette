@@ -1,4 +1,5 @@
 import { GENDER_MALE, type Answers } from "./funnel";
+import { buildDashboard, type DashboardData, type PhotoFeatures } from "./dashboard";
 import {
   BLACK_ALTERNATIVES,
   CAUTION_LIBRARY,
@@ -18,6 +19,8 @@ export type PhotoAnalysis = {
   depth: Depth;
   saturation: Saturation;
   contrast: Contrast;
+  /** Natural eye, hair and skin colour sampled from the photo (when available). */
+  features?: PhotoFeatures | undefined;
 };
 
 export type ColorRecommendation = {
@@ -64,6 +67,8 @@ export type ColorReport = {
   cautionNote: string;
   outfit: string;
   personalizationNotes: string[];
+  /** Paid dashboard data; missing on reports created before the dashboard existed. */
+  dashboard?: DashboardData | undefined;
 };
 
 type NumericTemperature = -2 | -1 | 0 | 1 | 2;
@@ -670,6 +675,27 @@ export function buildColorReport(photo: PhotoAnalysis, answers: Answers): ColorR
   const hair = buildHair(photo, answers);
   const caution = buildCautionColors(photo, answers);
   const menswear = male ? buildMenswear(photo, answers, accents, bestWhite) : undefined;
+  const ranked = COLOR_LIBRARY
+    .map((c) => ({ c, score: colorScore(c, photo, answers, "palette") }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.c);
+  let dashboard: DashboardData | undefined;
+  try {
+    dashboard = buildDashboard({
+      photo,
+      features: photo.features,
+      answers,
+      ranked,
+      base,
+      accents,
+      white: bestWhite.name,
+      male,
+      makeupShades: male ? undefined : MAKEUP_LIBRARY[makeupKey(photo)],
+    });
+  } catch (error) {
+    // The classic report still works without the dashboard.
+    console.error("Could not build dashboard", error);
+  }
 
   const age = ageGroup(answers);
   const ageContext = male
@@ -695,6 +721,7 @@ export function buildColorReport(photo: PhotoAnalysis, answers: Answers): ColorR
     cautionNote: caution.note,
     outfit: male && menswear ? buildMenOutfit(base, accents, bestWhite, metal, menswear.suits[0]!.name, answers) : buildOutfit(base, accents, bestWhite, metal, answers),
     personalizationNotes: personalizationNotes(answers),
+    dashboard,
   };
 }
 

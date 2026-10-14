@@ -17,6 +17,7 @@ import { Route as NiePamietamHaslaRouteImport } from './routes/nie-pamietam-hasl
 import { Route as NoweHasloRouteImport } from './routes/nowe-haslo'
 import { Route as OdstapienieOdUmowyRouteImport } from './routes/odstapienie-od-umowy'
 import { Route as OdstapienieUmowyRouteImport } from './routes/odstapienie-umowy'
+import { Route as PodgladRaportuRouteImport } from './routes/podglad-raportu'
 import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
 import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
 import { Route as RegulaminRouteImport } from './routes/regulamin'
@@ -67,6 +68,11 @@ const OdstapienieOdUmowyRoute = OdstapienieOdUmowyRouteImport.update({
 const OdstapienieUmowyRoute = OdstapienieUmowyRouteImport.update({
   id: '/odstapienie-umowy',
   path: '/odstapienie-umowy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PodgladRaportuRoute = PodgladRaportuRouteImport.update({
+  id: '/podglad-raportu',
+  path: '/podglad-raportu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PolitykaCookiesRoute = PolitykaCookiesRouteImport.update({
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
   '/odstapienie-umowy': typeof OdstapienieUmowyRoute
+  '/podglad-raportu': typeof PodgladRaportuRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
   '/odstapienie-umowy': typeof OdstapienieUmowyRoute
+  '/podglad-raportu': typeof PodgladRaportuRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/nowe-haslo': typeof NoweHasloRoute
   '/odstapienie-od-umowy': typeof OdstapienieOdUmowyRoute
   '/odstapienie-umowy': typeof OdstapienieUmowyRoute
+  '/podglad-raportu': typeof PodgladRaportuRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/nowe-haslo'
     | '/odstapienie-od-umowy'
     | '/odstapienie-umowy'
+    | '/podglad-raportu'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/nowe-haslo'
     | '/odstapienie-od-umowy'
     | '/odstapienie-umowy'
+    | '/podglad-raportu'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/nowe-haslo'
     | '/odstapienie-od-umowy'
     | '/odstapienie-umowy'
+    | '/podglad-raportu'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
@@ -264,6 +276,7 @@ export interface RootRouteChildren {
   NoweHasloRoute: typeof NoweHasloRoute
   OdstapienieOdUmowyRoute: typeof OdstapienieOdUmowyRoute
   OdstapienieUmowyRoute: typeof OdstapienieUmowyRoute
+  PodgladRaportuRoute: typeof PodgladRaportuRoute
   PolitykaCookiesRoute: typeof PolitykaCookiesRoute
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/odstapienie-umowy'
       fullPath: '/odstapienie-umowy'
       preLoaderRoute: typeof OdstapienieUmowyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/podglad-raportu': {
+      id: '/podglad-raportu'
+      path: '/podglad-raportu'
+      fullPath: '/podglad-raportu'
+      preLoaderRoute: typeof PodgladRaportuRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/polityka-cookies': {
@@ -424,6 +444,7 @@ const rootRouteChildren: RootRouteChildren = {
   NoweHasloRoute: NoweHasloRoute,
   OdstapienieOdUmowyRoute: OdstapienieOdUmowyRoute,
   OdstapienieUmowyRoute: OdstapienieUmowyRoute,
+  PodgladRaportuRoute: PodgladRaportuRoute,
   PolitykaCookiesRoute: PolitykaCookiesRoute,
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,

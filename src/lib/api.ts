@@ -1,6 +1,6 @@
 import type { AuthError, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { buildColorReport, type ColorReport } from "@/content/engine";
+import { buildColorReport, type ColorReport, type PhotoAnalysis } from "@/content/engine";
 import { analyzeFacePhoto, type PhotoProblem } from "@/lib/photo-analysis";
 import type { Answers } from "@/content/funnel";
 import type { Result } from "@/types/result";
@@ -10,13 +10,18 @@ type ResultRow = {
   is_paid: boolean;
   answers: Answers;
   report: ColorReport;
+  /** Gemini's reading of the photo. Missing on results saved before migration 0008. */
+  photo_analysis?: PhotoAnalysis | null;
   // Missing until migration 0002 is applied.
   user_id?: string | null;
   created_at: string;
 };
 
-function fromRow({ is_paid, user_id, created_at: _created_at, ...rest }: ResultRow): Result {
-  return { ...rest, isPaid: is_paid, userId: user_id ?? null };
+function fromRow({ id, is_paid, user_id, answers, report, photo_analysis }: ResultRow): Result {
+  // Reports saved before the dashboard existed lack it; rebuild from the saved
+  // photo analysis when we have it.
+  if (!report.dashboard && photo_analysis) report = buildColorReport(photo_analysis, answers);
+  return { id, answers, report, isPaid: is_paid, userId: user_id ?? null };
 }
 
 // Ids of results this browser created anonymously, so they can be attached to
@@ -92,7 +97,9 @@ export async function analyzePhoto(answers: Answers, photoFile: File): Promise<R
   // The id is generated here because anonymous visitors can't read rows back
   // from the table (migration 0003); the result is then fetched via getResult.
   const id = crypto.randomUUID();
-  const { error } = await supabase.from("results").insert({ id, answers, report, is_paid: false });
+  let { error } = await supabase.from("results").insert({ id, answers, report, photo_analysis: photo, is_paid: false });
+  // TEMPORARY: column missing until migration 0008 is applied — save without it.
+  if (error?.code === MISSING_COLUMN) ({ error } = await supabase.from("results").insert({ id, answers, report, is_paid: false }));
   if (error) throw error;
   const result = await getResult(id);
   if (!result) throw new Error("Failed to save result");
@@ -103,6 +110,8 @@ export async function analyzePhoto(answers: Answers, photoFile: File): Promise<R
 // PostgREST's "function not found" code. TEMPORARY fallback so this build
 // keeps working until migration 0003 is applied; remove once it is.
 const MISSING_FUNCTION = "PGRST202";
+// PostgREST's "column not found" code.
+const MISSING_COLUMN = "PGRST204";
 
 export async function getResult(id: string): Promise<Result | null> {
   const { data, error } = await supabase.rpc("get_result", { result_id: id }).maybeSingle<ResultRow>();

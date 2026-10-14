@@ -66,6 +66,7 @@ export const privacyPolicy = {
             "Resend — wysyłka wiadomości e-mail (np. kodów weryfikacyjnych).",
           ],
         },
+        "W raporcie mogą pojawić się zdjęcia znanych osób na wolnych licencjach z Wikimedia Commons (Wikimedia Foundation). Wyświetlając je, Twoja przeglądarka łączy się bezpośrednio z serwerami Wikimedia, które otrzymują m.in. Twój adres IP — zgodnie z polityką prywatności Wikimedia.",
         "Płatności obsługuje Stripe (Stripe Payments Europe, Ltd.), który w zakresie danych płatniczych działa jako odrębny administrator — zasady opisuje polityka prywatności Stripe.",
         "Dane możemy też udostępnić organom państwowym, jeśli wymaga tego prawo.",
       ],
