@@ -7,6 +7,7 @@ import { pl } from "@/content/pl";
 import { createResult, PhotoRejected } from "@/lib/api";
 import { GENDER_MALE, type Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/zdjecie")({
@@ -38,6 +39,12 @@ function PhotoPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => setAnswers(readAnswers()), []);
+  // Login is required before the photo step, so every result belongs to an account
+  // from the start. The quiz answers wait in sessionStorage during sign-up.
+  const user = useAuthUser();
+  useEffect(() => {
+    if (user === null) void navigate({ to: "/rejestracja", search: { redirect: "/zdjecie" }, replace: true });
+  }, [user, navigate]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   const male = answers["gender"] === GENDER_MALE;
@@ -72,6 +79,8 @@ function PhotoPage() {
       setLoading(false);
     }
   };
+
+  if (!user) return <main className="min-h-[70vh]" />;
 
   if (loading) {
     return (

@@ -4,7 +4,7 @@ import { ArrowRight, LockKeyhole, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { claimLocalResults, listMyResults, type ResultSummary } from "@/lib/api";
+import { listMyResults, type ResultSummary } from "@/lib/api";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/moje-wyniki")({
@@ -23,7 +23,7 @@ function MyResultsPage() {
     if (!user) return;
     let active = true;
     // Claim first so a result made just before logging in is already listed.
-    claimLocalResults().then(listMyResults).then((value) => { if (active) setResults(value); }, () => { if (active) setFailed(true); });
+    listMyResults().then((value) => { if (active) setResults(value); }, () => { if (active) setFailed(true); });
     return () => { active = false; };
   }, [user, navigate]);
 

@@ -16,7 +16,8 @@ const CONTRASTS = ["niski", "średni", "wysoki"] as const;
 const PROBLEMS = ["no_face", "multiple_faces", "too_dark", "heavy_filter", "face_hidden"] as const;
 
 export type PhotoProblem = (typeof PROBLEMS)[number];
-export type PhotoAnalysisResponse = { ok: true } | { ok: false; problem: PhotoProblem | "unavailable" | "rate_limited" | "daily_limit" | "not_paid" };
+type LimitProblem = "unavailable" | "rate_limited" | "daily_limit" | "too_many_attempts";
+export type PhotoAnalysisResponse = { ok: true } | { ok: false; problem: PhotoProblem | LimitProblem | "not_paid" };
 
 type Input = {
   resultId: string;
@@ -104,18 +105,19 @@ export const analyzePaidPhoto = createServerFn({ method: "POST" })
     const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 
     // Only paid results are analysed; an already analysed one is left as it is.
-    const { data: row, error } = await admin.from("results").select("is_paid, answers, report").eq("id", data.resultId).maybeSingle<{ is_paid: boolean; answers: Answers; report: { palette?: unknown } }>();
+    const { data: row, error } = await admin.from("results").select("is_paid, stripe_session_id, answers, report").eq("id", data.resultId).maybeSingle<{ is_paid: boolean; stripe_session_id: string | null; answers: Answers; report: { palette?: unknown } }>();
     if (error || !row) {
       console.error("Could not load result for analysis", data.resultId, error);
       return { ok: false, problem: "unavailable" };
     }
-    if (!row.is_paid) return { ok: false, problem: "not_paid" };
     if (Array.isArray(row.report?.palette)) return { ok: true };
+    // Paid means: marked paid by the signed Stripe webhook, which also stores the session id.
+    if (!row.is_paid || !row.stripe_session_id) return { ok: false, problem: "not_paid" };
 
     const text = (id: string) => (typeof row.answers[id] === "string" ? (row.answers[id] as string).slice(0, 80) : "");
     const context: Context = { gender: text("gender"), naturalHair: text("naturalHair"), eyes: text("eyes"), currentHair: text("currentHair") || text("dyedHair") };
 
-    const result = await runGemini(data.image, context);
+    const result = await runGemini(data.image, context, data.resultId);
     if (!result.ok) return result;
     const report = buildColorReport(result.analysis, row.answers);
     let { error: saveError } = await admin.from("results").update({ report, photo_analysis: result.analysis }).eq("id", data.resultId);
@@ -128,7 +130,13 @@ export const analyzePaidPhoto = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-async function runGemini(image: string, context: Context): Promise<{ ok: true; analysis: PhotoAnalysis } | { ok: false; problem: PhotoProblem | "unavailable" | "rate_limited" | "daily_limit" }> {
+/** The visitor's IP as set by the hosting platform (not the spoofable leftmost X-Forwarded-For). */
+async function clientIp(): Promise<string | undefined> {
+  const { getRequestHeader, getRequestIP } = await import("@tanstack/react-start/server");
+  return getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-real-ip") ?? getRequestHeader("x-vercel-forwarded-for") ?? getRequestIP({ xForwardedFor: true });
+}
+
+async function runGemini(image: string, context: Context, resultId: string): Promise<{ ok: true; analysis: PhotoAnalysis } | { ok: false; problem: PhotoProblem | LimitProblem }> {
   const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) {
     if (import.meta.env.DEV) {
@@ -139,10 +147,9 @@ async function runGemini(image: string, context: Context): Promise<{ ok: true; a
     return { ok: false, problem: "unavailable" };
   }
 
-  // Cost protection before the paid call: per-visitor and site-wide daily limits.
+  // Cost protection before the paid call: attempts per paid result, per visitor and site-wide.
   const { checkAndRecordAnalysis } = await import("@/lib/rate-limit");
-  const { getRequestIP } = await import("@tanstack/react-start/server");
-  const limit = await checkAndRecordAnalysis(getRequestIP({ xForwardedFor: true }));
+  const limit = await checkAndRecordAnalysis(await clientIp(), resultId);
   if (limit !== "ok") return { ok: false, problem: limit };
 
   // Primary model, then fallbacks if Google is overloaded (503/429), errors or is slow.

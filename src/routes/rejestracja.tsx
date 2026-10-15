@@ -42,7 +42,7 @@ function SignupPage() {
     }
   };
   const loginLink = <Link to="/logowanie" search={redirect ? { redirect } : {}} className="font-semibold text-primary hover:underline">{t.switchLink}</Link>;
-  return <AuthShell eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} footer={<>{t.switchText} {loginLink}</>}>
+  return <AuthShell eyebrow={t.eyebrow} title={t.title} subtitle={redirect === "/zdjecie" ? t.subtitlePhoto : t.subtitle} footer={<>{t.switchText} {loginLink}</>}>
     <form onSubmit={submit} className="space-y-5">
       <Field label={pl.auth.email}>{(id) => <Input id={id} type="email" inputMode="email" autoComplete="email" placeholder={pl.auth.emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} required className={fieldClass} />}</Field>
       <Field label={pl.auth.password} hint={pl.auth.passwordHint}>{(id) => <PasswordInput id={id} value={password} onChange={setPassword} autoComplete="new-password" />}</Field>

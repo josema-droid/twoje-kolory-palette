@@ -26,31 +26,9 @@ function fromRow({ id, is_paid, user_id, answers, report, photo_analysis }: Resu
   return { id, answers, report, isPaid: is_paid, userId: user_id ?? null };
 }
 
-// Ids of results this browser created anonymously, so they can be attached to
-// the account once the user logs in (claimLocalResults).
-const LOCAL_RESULTS_KEY = "twoje-kolory-results";
-
-function readLocalResultIds(): string[] {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(LOCAL_RESULTS_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocalResultIds(ids: string[]): void {
-  try {
-    if (ids.length) localStorage.setItem(LOCAL_RESULTS_KEY, JSON.stringify(ids));
-    else localStorage.removeItem(LOCAL_RESULTS_KEY);
-  } catch {
-    // Storage unavailable (private mode): the result just won't be auto-claimed.
-  }
-}
-
 /** Gemini could not use the photo (no face, too dark, …) or the analysis is down. */
 export class PhotoRejected extends Error {
-  constructor(public problem: PhotoProblem | "unavailable" | "unreadable" | "rate_limited" | "daily_limit" | "not_paid") {
+  constructor(public problem: PhotoProblem | "unavailable" | "unreadable" | "rate_limited" | "daily_limit" | "too_many_attempts" | "not_paid") {
     super(problem);
   }
 }
@@ -94,14 +72,13 @@ export async function createResult(answers: Answers, photoFile: File): Promise<s
   } catch {
     throw new PhotoRejected("unreadable");
   }
-  // The id is generated here because anonymous visitors can't read rows back
-  // from the table (migration 0003); the result is then fetched via getResult.
+  // The id is generated here so the row needn't be read back after insert; the
+  // result is then fetched via getResult. Only id and answers may be sent
+  // (migration 0010); user_id defaults to the logged-in user, is_paid to false.
   const id = crypto.randomUUID();
-  const { error } = await supabase.from("results").insert({ id, answers, report: {}, is_paid: false });
+  const { error } = await supabase.from("results").insert({ id, answers });
   if (error) throw error;
   savePhoto(id, image);
-  const { data: session } = await supabase.auth.getSession();
-  if (!session.session) writeLocalResultIds([...readLocalResultIds(), id]);
   return id;
 }
 
@@ -176,15 +153,6 @@ export async function listMyResults(): Promise<ResultSummary[]> {
     .returns<Pick<ResultRow, "id" | "is_paid" | "created_at">[]>();
   if (error) throw error;
   return data.map((row) => ({ id: row.id, isPaid: row.is_paid, createdAt: row.created_at }));
-}
-
-// Attaches results created on this device before logging in to the current
-// account. Safe to call repeatedly; failures keep the ids for the next try.
-export async function claimLocalResults(): Promise<void> {
-  const ids = readLocalResultIds();
-  if (!ids.length) return;
-  const { error } = await supabase.rpc("claim_results", { result_ids: ids });
-  if (!error) writeLocalResultIds([]);
 }
 
 // --- Auth -----------------------------------------------------------------

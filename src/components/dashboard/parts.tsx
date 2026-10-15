@@ -4,7 +4,7 @@ import type { Swatch } from "@/content/dashboard";
 
 export function DashSection({ id, eyebrow, title, intro, children }: { id: string; eyebrow?: string; title: string; intro?: string; children: ReactNode }) {
   return (
-    <section id={id} className="dash-section" aria-labelledby={`${id}-title`}>
+    <section id={id} className="dash-section" aria-labelledby={`${id}-title`} data-pdf-block>
       {eyebrow && <p className="dash-eyebrow">{eyebrow}</p>}
       <h2 id={`${id}-title`} className="dash-h2">{title}</h2>
       {intro && <p className="dash-intro">{intro}</p>}

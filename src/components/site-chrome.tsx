@@ -18,9 +18,6 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const [cookieChoice, setCookieChoice] = useState<string | null>(null);
   const user = useAuthUser();
   const onAuthPage = AUTH_PATHS.includes(pathname);
-  const userId = user?.id;
-  // Attach results made on this device before logging in to the account.
-  useEffect(() => { if (userId) void import("@/lib/api").then((api) => api.claimLocalResults()); }, [userId]);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     trackEvent("PageView", { path: pathname });

@@ -6,6 +6,7 @@ import type { DashboardData, FeatureAnalysis } from "@/content/dashboard";
 import { swatch } from "@/components/landing/utils";
 import { SHOPPING, SHOPPING_ITEMS } from "@/content/shopping";
 import { ShareButton } from "@/components/share-button";
+import { PdfButton } from "@/components/pdf-button";
 import { CelebrityCard } from "./celebrity-card";
 import { DashSection, Meter, Pills, SwatchRow } from "./parts";
 
@@ -49,12 +50,15 @@ export function ResultDashboard({ report, dashboard: d }: { report: ColorReport;
   ] as const;
 
   return (
-    <main className="landing dash">
-      <header id="profil" className="dash-hero">
+    <main id="raport" className="landing dash">
+      <header id="profil" className="dash-hero" data-pdf-block>
         <div className="dash-wrap">
           <div className="dash-hero__top">
             <p className="eyebrow-line">{t.eyebrow}</p>
-            <ShareButton />
+            <div className="flex flex-wrap gap-2" data-pdf-ignore>
+              <PdfButton targetId="raport" />
+              <ShareButton />
+            </div>
           </div>
           <h1 className="lp-display dash-hero__title">{t.typePrefix} <span>{d.type.label}</span></h1>
           <Pills items={d.type.chips} />

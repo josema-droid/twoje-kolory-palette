@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, LockKeyhole, Sparkles, Download } from "lucide-react";
+import { ArrowRight, Check, LockKeyhole, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { pl } from "@/content/pl";
@@ -14,6 +14,7 @@ import type { ColorRecommendation } from "@/content/engine";
 import type { Result } from "@/types/result";
 import { seo } from "@/lib/seo";
 import { ResultDashboard } from "@/components/dashboard/result-dashboard";
+import { PdfButton } from "@/components/pdf-button";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -113,7 +114,6 @@ function ResultPage() {
   const [consent, setConsent] = useState(false);
   const [terms, setTerms] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [downloadNote, setDownloadNote] = useState(false);
   const user = useAuthUser();
   const [teaser, setTeaser] = useState<Teaser | null>(null);
   useEffect(() => {
@@ -194,7 +194,7 @@ function ResultPage() {
       </section>
       <div className="mx-auto max-w-5xl px-5 pt-14 md:px-10 md:pt-20">
         {result.isPaid ? (
-          <div className="space-y-16">
+          <div id="raport" className="space-y-16" data-pdf-block>
             <section>
               <ul className="space-y-2 text-sm leading-7 text-muted-foreground">
                 {report.profileDetails.map((line) => <li key={line}>{line}</li>)}
@@ -282,8 +282,7 @@ function ResultPage() {
             </section>
 
             <div className="border-t border-border pt-10">
-              <Button variant="outline" className="h-12 rounded-full border-primary/35 px-7 text-primary" onClick={() => setDownloadNote(true)}><Download size={17} />{t.download}</Button>
-              {downloadNote && <p className="mt-3 text-sm text-muted-foreground">{t.downloadPlaceholder}</p>}
+              <PdfButton targetId="raport" />
             </div>
           </div>
         ) : (
