@@ -18,6 +18,7 @@ export const cookiesDoc: LegalDoc = {
               ["`twoje-kolory-cookies` (pamięć przeglądarki)", "Zapamiętanie Twojego wyboru dotyczącego cookies", "Do czasu zmiany wyboru lub usunięcia danych przeglądarki", "Niepotrzebna"],
               ["`sb-uqdognojnokyznuirewm-auth-token` (pamięć przeglądarki)", "Utrzymanie Twojego zalogowania do konta", "Do wylogowania lub wygaśnięcia sesji", "Niepotrzebna"],
               ["`twoje-kolory-answers` (pamięć sesji przeglądarki)", "Zapamiętanie odpowiedzi z quizu do czasu dodania zdjęcia", "Do zamknięcia karty przeglądarki", "Niepotrzebna"],
+              ["`twoje-kolory-photo:[identyfikator]` (pamięć przeglądarki)", "Przechowanie zmniejszonego zdjęcia na Twoim urządzeniu do chwili zapłaty, aby można je było przeanalizować po zakupie", "Do zakończenia analizy lub usunięcia danych przeglądarki", "Niepotrzebna"],
               ["`twoje-kolory-results` (pamięć przeglądarki)", "Zapamiętanie wyników utworzonych bez konta, aby można je było przypisać do konta po zalogowaniu", "Do zalogowania lub usunięcia danych przeglądarki", "Niepotrzebna"],
               ["`_ga` (Google Analytics)", "Odróżnianie odwiedzających w statystykach", "Do 2 lat", "Wymagana"],
               ["`_ga_[identyfikator]` (Google Analytics)", "Utrzymanie stanu sesji w statystykach", "Do 2 lat", "Wymagana"],

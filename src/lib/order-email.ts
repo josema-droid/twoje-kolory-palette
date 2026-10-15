@@ -57,7 +57,7 @@ export function renderOrderEmail(o: OrderEmail) {
   const consentLine = o.consentAt
     ? `W dniu ${when(o.consentAt)}, przed zapłatą, zaznaczono w serwisie oświadczenie: „${pl.result.legalConsent}” oraz akceptację Regulaminu (wersja ${version}).`
     : `Przed zapłatą zaznaczono w serwisie oświadczenie: „${pl.result.legalConsent}” oraz akceptację Regulaminu (wersja ${version}).`;
-  const waiver = "Na Twoją wyraźną prośbę rozpoczęliśmy świadczenie Usługi przed upływem 14 dni, a wynik został dostarczony. W związku z tym prawo odstąpienia od umowy nie przysługuje (art. 38 ust. 1 pkt 1 i 13 ustawy o prawach konsumenta). Twoje prawa w razie niezgodności Usługi z umową (reklamacja) pozostają bez zmian.";
+  const waiver = "Na Twoją wyraźną prośbę rozpoczęliśmy świadczenie Usługi przed upływem 14 dni. Po dostarczeniu wyniku prawo odstąpienia od umowy nie przysługuje (art. 38 ust. 1 pkt 1 i 13 ustawy o prawach konsumenta). Twoje prawa w razie niezgodności Usługi z umową (reklamacja) pozostają bez zmian.";
   const rows: [string, string][] = [
     ["Numer zamówienia", orderNo],
     ["Data zapłaty", when(o.paidAt)],
@@ -76,7 +76,7 @@ export function renderOrderEmail(o: OrderEmail) {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;padding:36px 28px;">
           <tr><td style="font-family:Georgia,serif;font-size:22px;">Twój Color<span style="color:${ROSE};">.</span></td></tr>
           <tr><td style="padding-top:28px;font-family:Georgia,serif;font-size:28px;line-height:1.2;">Dziękujemy za zamówienie</td></tr>
-          <tr><td style="padding-top:14px;font-size:15px;line-height:1.6;color:${MUTED};">Płatność została przyjęta. Twój pełny wynik analizy kolorystycznej jest już dostępny pod linkiem poniżej. Zachowaj tę wiadomość — to potwierdzenie zawarcia umowy.</td></tr>
+          <tr><td style="padding-top:14px;font-size:15px;line-height:1.6;color:${MUTED};">Płatność została przyjęta. Pod linkiem poniżej przygotujemy i zawsze znajdziesz swój pełny wynik analizy kolorystycznej. Zachowaj tę wiadomość — to potwierdzenie zawarcia umowy.</td></tr>
           <tr><td align="center" style="padding:28px 0;">
             <a href="${link}" style="display:inline-block;background:${ROSE};color:#ffffff;text-decoration:none;border-radius:999px;padding:14px 28px;font-size:15px;font-weight:bold;">Zobacz swój wynik</a>
           </td></tr>
@@ -103,7 +103,7 @@ export function renderOrderEmail(o: OrderEmail) {
   const text = [
     "Twój Color — Dziękujemy za zamówienie",
     "",
-    "Płatność została przyjęta. Twój pełny wynik jest dostępny tutaj:",
+    "Płatność została przyjęta. Twój pełny wynik znajdziesz tutaj:",
     link,
     "Zachowaj tę wiadomość — to potwierdzenie zawarcia umowy.",
     "",

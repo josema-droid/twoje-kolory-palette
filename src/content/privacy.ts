@@ -43,7 +43,8 @@ export const privacyPolicy = {
         "Analiza kolorystyczna jest wspierana przez sztuczną inteligencję. Oto dokładnie, co dzieje się z Twoim zdjęciem:",
         {
           list: [
-            "Przed wysłaniem zdjęcie jest zmniejszane w Twojej przeglądarce, a następnie przesyłane szyfrowanym połączeniem (HTTPS) do usługi Google Gemini API (dostawca: Google). Model AI ocenia wyłącznie cechy kolorystyczne: podton i jasność skóry, kolor oczu i włosów oraz kontrast.",
+            "Po dodaniu zdjęcie jest zmniejszane i zostaje wyłącznie w pamięci Twojej przeglądarki — do chwili zapłaty nie trafia ani do nas, ani do Google. Bezpłatny podgląd kolorów przed zakupem przygotowujemy tylko na podstawie odpowiedzi z testu.",
+            "Dopiero po opłaceniu zamówienia zdjęcie jest przesyłane szyfrowanym połączeniem (HTTPS) do usługi Google Gemini API (dostawca: Google). Model AI ocenia wyłącznie cechy kolorystyczne: podton i jasność skóry, kolor oczu i włosów oraz kontrast. Po udanej analizie zdjęcie jest usuwane także z pamięci Twojej przeglądarki.",
             "Nie zapisujemy Twojego zdjęcia w naszej bazie danych ani na naszych serwerach. Jest przetwarzane tylko na czas analizy (zwykle kilka sekund) i usuwane po jej zakończeniu — w każdym przypadku nie później niż w ciągu 24 godzin. Zapisujemy wyłącznie wynik analizy (np. „ciepła, średnia głębia”) i Twoją paletę.",
             "Korzystamy z płatnej wersji Gemini API. Zgodnie z warunkami Google, Google nie wykorzystuje przesyłanych w niej zdjęć ani wyników do trenowania ani ulepszania swoich modeli. Google może przez ograniczony czas przechowywać zapytania wyłącznie w celu wykrywania i zapobiegania nadużyciom, zgodnie z warunkami Google Cloud.",
             "Nie używamy zdjęcia do rozpoznawania ani identyfikacji osób (zdjęcie nie służy jako dane biometryczne w rozumieniu art. 9 RODO) i nie wnioskujemy z niego o pochodzeniu etnicznym, zdrowiu ani innych danych szczególnie chronionych.",

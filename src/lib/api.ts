@@ -1,7 +1,8 @@
 import type { AuthError, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { buildColorReport, type ColorReport, type PhotoAnalysis } from "@/content/engine";
-import { analyzeFacePhoto, type PhotoProblem } from "@/lib/photo-analysis";
+import { analyzePaidPhoto, type PhotoProblem } from "@/lib/photo-analysis";
+import { deletePhoto, loadPhoto, savePhoto } from "@/lib/photo-store";
 import type { Answers } from "@/content/funnel";
 import type { Result } from "@/types/result";
 import { buildTeaser, teaserKey, type Teaser } from "@/content/teaser";
@@ -49,7 +50,7 @@ function writeLocalResultIds(ids: string[]): void {
 
 /** Gemini could not use the photo (no face, too dark, …) or the analysis is down. */
 export class PhotoRejected extends Error {
-  constructor(public problem: PhotoProblem | "unavailable" | "unreadable" | "rate_limited" | "daily_limit") {
+  constructor(public problem: PhotoProblem | "unavailable" | "unreadable" | "rate_limited" | "daily_limit" | "not_paid") {
     super(problem);
   }
 }
@@ -81,30 +82,52 @@ async function photoToBase64Jpeg(file: File): Promise<string> {
   return dataUrl.slice(dataUrl.indexOf(",") + 1);
 }
 
-export async function analyzePhoto(answers: Answers, photoFile: File): Promise<Result> {
+/**
+ * Before payment: saves the quiz answers as a new (unpaid, not yet analysed)
+ * result and keeps the downscaled photo in this browser. No AI call happens
+ * here — the photo is analysed only after payment (analyzePaidResult).
+ */
+export async function createResult(answers: Answers, photoFile: File): Promise<string> {
   let image: string;
   try {
     image = await photoToBase64Jpeg(photoFile);
   } catch {
     throw new PhotoRejected("unreadable");
   }
-  const text = (id: string) => (typeof answers[id] === "string" ? (answers[id] as string) : "");
-  const response = await analyzeFacePhoto({
-    data: { image, context: { gender: text("gender"), naturalHair: text("naturalHair"), eyes: text("eyes"), currentHair: text("currentHair") || text("dyedHair") } },
-  });
-  if (!response.ok) throw new PhotoRejected(response.problem);
-  const photo = response.analysis;
-  const report = buildColorReport(photo, answers);
   // The id is generated here because anonymous visitors can't read rows back
   // from the table (migration 0003); the result is then fetched via getResult.
   const id = crypto.randomUUID();
-  let { error } = await supabase.from("results").insert({ id, answers, report, photo_analysis: photo, is_paid: false });
-  // TEMPORARY: column missing until migration 0008 is applied — save without it.
-  if (error?.code === MISSING_COLUMN) ({ error } = await supabase.from("results").insert({ id, answers, report, is_paid: false }));
+  const { error } = await supabase.from("results").insert({ id, answers, report: {}, is_paid: false });
   if (error) throw error;
-  const result = await getResult(id);
-  if (!result) throw new Error("Failed to save result");
-  if (!result.userId) writeLocalResultIds([...readLocalResultIds(), result.id]);
+  savePhoto(id, image);
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) writeLocalResultIds([...readLocalResultIds(), id]);
+  return id;
+}
+
+/** True once the paid analysis has produced the full report. */
+export const isAnalysed = (result: Result) => Array.isArray(result.report.palette);
+
+/** The photo saved in this browser before payment, if it's still there. */
+export const storedPhoto = (resultId: string) => loadPhoto(resultId);
+
+/**
+ * After payment: sends the photo (the one saved before payment, or a newly
+ * chosen file) for analysis. The server checks the result is paid, then
+ * builds and saves the full report.
+ */
+export async function analyzePaidResult(resultId: string, photo: string | File): Promise<Result> {
+  let image: string;
+  try {
+    image = typeof photo === "string" ? photo : await photoToBase64Jpeg(photo);
+  } catch {
+    throw new PhotoRejected("unreadable");
+  }
+  const response = await analyzePaidPhoto({ data: { resultId, image } });
+  if (!response.ok) throw new PhotoRejected(response.problem);
+  deletePhoto(resultId);
+  const result = await getResult(resultId);
+  if (!result) throw new Error("Failed to load analysed result");
   return result;
 }
 

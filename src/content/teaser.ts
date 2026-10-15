@@ -116,6 +116,12 @@ export function buildTeaser(eyes: string, hair: string, undertone: Undertone): T
   return { summary, colors };
 }
 
+/** Rough palette from the answers, used only as the blurred "locked" preview before payment. */
+export function previewPalette(answers: Answers) {
+  const { eyes, hair, undertone } = teaserKey(answers);
+  return buildColorReport(estimate(eyes, hair, undertone), { gender: GENDER_FEMALE, eyes, naturalHair: hair }).palette;
+}
+
 /** Every combination, for seeding teaser_palettes. */
 export function allTeasers() {
   return TEASER_EYES.flatMap((eyes) => TEASER_HAIR.flatMap((hair) => TEASER_UNDERTONES.map((undertone) => ({ eyes, hair, undertone, ...buildTeaser(eyes, hair, undertone) }))));

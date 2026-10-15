@@ -4,7 +4,7 @@ import { Check, ImagePlus, Info, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { pl } from "@/content/pl";
-import { analyzePhoto, PhotoRejected } from "@/lib/api";
+import { createResult, PhotoRejected } from "@/lib/api";
 import { GENDER_MALE, type Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
 import { seo } from "@/lib/seo";
@@ -59,9 +59,10 @@ function PhotoPage() {
     setLoading(true);
     const photoChecks = checkKeys.map((k) => `${t.checks[k].q} ${checks[k] ? t.yes : t.no}`);
     try {
-      const [result] = await Promise.all([analyzePhoto({ ...answers, photoChecks }, file), new Promise((r) => window.setTimeout(r, 4000))]);
-      trackEvent("PhotoAnalyzed");
-      navigate({ to: "/wynik/$id", params: { id: result.id } });
+      // No AI analysis here: it runs only after payment. The short pause keeps the transition calm.
+      const [id] = await Promise.all([createResult({ ...answers, photoChecks }, file), new Promise((r) => window.setTimeout(r, 1500))]);
+      trackEvent("PhotoSaved");
+      navigate({ to: "/wynik/$id", params: { id } });
     } catch (e) {
       const problem = e instanceof PhotoRejected ? e.problem : "unavailable";
       if (!(e instanceof PhotoRejected)) console.error(e);

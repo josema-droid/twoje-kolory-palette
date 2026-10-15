@@ -1,10 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
-import type { PhotoAnalysis } from "@/content/engine";
+import { buildColorReport, type PhotoAnalysis } from "@/content/engine";
+import type { Answers } from "@/content/funnel";
 import { isHex } from "@/lib/color";
 
 // Photo → the four colour parameters the report engine needs, using Gemini.
-// Runs on the server only: the API key never reaches the browser, and the photo
-// is sent to Google for this one request and not stored by us.
+// Runs only AFTER payment, on the server: it checks the result is paid, sends
+// the photo to Google for this one request (never stored by us), then builds
+// and saves the full report. Before payment visitors only see the free teaser
+// from their quiz answers (src/content/teaser.ts) — no Gemini call.
 
 const TEMPERATURES = ["chłodna", "neutralno-chłodna", "neutralna", "neutralno-ciepła", "ciepła"] as const;
 const DEPTHS = ["jasna", "średnia", "głęboka"] as const;
@@ -13,13 +16,17 @@ const CONTRASTS = ["niski", "średni", "wysoki"] as const;
 const PROBLEMS = ["no_face", "multiple_faces", "too_dark", "heavy_filter", "face_hidden"] as const;
 
 export type PhotoProblem = (typeof PROBLEMS)[number];
-export type PhotoAnalysisResponse = { ok: true; analysis: PhotoAnalysis } | { ok: false; problem: PhotoProblem | "unavailable" | "rate_limited" | "daily_limit" };
+export type PhotoAnalysisResponse = { ok: true } | { ok: false; problem: PhotoProblem | "unavailable" | "rate_limited" | "daily_limit" | "not_paid" };
 
 type Input = {
+  resultId: string;
   /** Base64 JPEG, already downscaled in the browser. */
   image: string;
-  context: { gender: string; naturalHair: string; eyes: string; currentHair: string };
 };
+
+type Context = { gender: string; naturalHair: string; eyes: string; currentHair: string };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const MAX_BASE64_LENGTH = 3_000_000; // ~2.2 MB image; the browser sends ~150–400 KB
 
@@ -43,7 +50,7 @@ const responseSchema = {
   propertyOrdering: ["usable", "problem", "temperature", "depth", "saturation", "contrast", "eyeHex", "eyeName", "hairHex", "hairName", "skinHex", "skinName"],
 };
 
-function prompt(ctx: Input["context"]) {
+function prompt(ctx: Context) {
   return `You are an expert personal colour analyst (12-season system). Analyse the person in the photo.
 
 Judge only natural colouring: skin undertone, skin depth, eye colour and the natural hair and brow colour. Ignore clothing, background, makeup and the colour cast of the light as much as possible.
@@ -78,97 +85,131 @@ function demoAnalysis(image: string): PhotoAnalysis {
 
 const oneOf = <T extends string>(list: readonly T[], value: unknown): value is T => list.includes(value as T);
 
-export const analyzeFacePhoto = createServerFn({ method: "POST" })
+export const analyzePaidPhoto = createServerFn({ method: "POST" })
   .validator((data: Input) => {
+    if (typeof data?.resultId !== "string" || !UUID.test(data.resultId)) throw new Error("Invalid result id");
     if (typeof data?.image !== "string" || data.image.length === 0 || data.image.length > MAX_BASE64_LENGTH || !/^[A-Za-z0-9+/=]+$/.test(data.image.slice(0, 200))) {
       throw new Error("Invalid image");
     }
-    const c = data.context ?? {};
-    const clip = (v: unknown) => (typeof v === "string" ? v.slice(0, 80) : "");
-    return { image: data.image, context: { gender: clip(c.gender), naturalHair: clip(c.naturalHair), eyes: clip(c.eyes), currentHair: clip(c.currentHair) } };
+    return { resultId: data.resultId, image: data.image };
   })
   .handler(async ({ data }): Promise<PhotoAnalysisResponse> => {
-    const apiKey = process.env["GEMINI_API_KEY"];
-    if (!apiKey) {
-      if (import.meta.env.DEV) {
-        console.warn("GEMINI_API_KEY is not set — using a fake photo analysis (development only).");
-        return { ok: true, analysis: demoAnalysis(data.image) };
-      }
-      console.error("GEMINI_API_KEY is not set");
+    const url = process.env["SUPABASE_URL"];
+    const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+    if (!url || !serviceKey) {
+      console.error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
       return { ok: false, problem: "unavailable" };
     }
+    const { createClient } = await import("@supabase/supabase-js");
+    const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 
-    // Cost protection before the paid call: per-visitor and site-wide daily limits.
-    const { checkAndRecordAnalysis } = await import("@/lib/rate-limit");
-    const { getRequestIP } = await import("@tanstack/react-start/server");
-    const limit = await checkAndRecordAnalysis(getRequestIP({ xForwardedFor: true }));
-    if (limit !== "ok") return { ok: false, problem: limit };
-
-    // Primary model, then fallbacks if Google is overloaded (503/429), errors or is slow.
-    // Benchmarked Oct 2026: gemini-3.5-flash ~4 s and matches the newest model; 3.8-flash took 45-60 s.
-    const models = [
-      process.env["GEMINI_MODEL"] || "gemini-3.5-flash",
-      process.env["GEMINI_FALLBACK_MODEL"] || "gemini-2.5-flash",
-      "gemini-3.1-flash-lite",
-    ];
-    // Overload errors come back in under a second, so a short pause + retry is cheap.
-    const attempts = models.flatMap((model) => [{ model, wait: 0 }, { model, wait: 1200 }]);
-    const deadline = Date.now() + 40_000;
-    // Gemini 2.x sets thinking with a token budget, 3.x with a level; keep it low for speed.
-    const body = (model: string) =>
-      JSON.stringify({
-        contents: [{ role: "user", parts: [{ inline_data: { mime_type: "image/jpeg", data: data.image } }, { text: prompt(data.context) }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema,
-          temperature: 0.2,
-          thinkingConfig: model.startsWith("gemini-2") ? { thinkingBudget: 512 } : { thinkingLevel: "low" },
-        },
-      });
-
-    for (const { model, wait } of attempts) {
-      if (Date.now() + wait > deadline) break;
-      if (wait) await new Promise((r) => setTimeout(r, wait));
-      let response: Response;
-      try {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-          method: "POST",
-          headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
-          body: body(model),
-          signal: AbortSignal.timeout(Math.max(3_000, Math.min(20_000, deadline - Date.now()))),
-        });
-      } catch (error) {
-        console.error(`Gemini request failed (${model})`, error);
-        continue;
-      }
-
-      if (!response.ok) {
-        console.error(`Gemini error (${model})`, response.status, (await response.text()).slice(0, 300));
-        continue; // 503/429 (overloaded) and 5xx: retry/fall back; 4xx config errors fail the same way on every attempt
-      }
-
-      try {
-        const json = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-        const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-        const out = JSON.parse(text) as Record<string, unknown>;
-        if (out["usable"] === false) {
-          return { ok: false, problem: oneOf(PROBLEMS, out["problem"]) ? out["problem"] : "no_face" };
-        }
-        if (oneOf(TEMPERATURES, out["temperature"]) && oneOf(DEPTHS, out["depth"]) && oneOf(SATURATIONS, out["saturation"]) && oneOf(CONTRASTS, out["contrast"])) {
-          // Feature colours are optional extras: invalid ones are dropped and the quiz answers fill in.
-          const feature = (hex: unknown, name: unknown) =>
-            isHex(hex) ? { hex: hex.toLowerCase(), name: typeof name === "string" ? name.slice(0, 40).toLowerCase() : "" } : undefined;
-          const features = {
-            eyes: feature(out["eyeHex"], out["eyeName"]),
-            hair: feature(out["hairHex"], out["hairName"]),
-            skin: feature(out["skinHex"], out["skinName"]),
-          };
-          return { ok: true, analysis: { temperature: out["temperature"], depth: out["depth"], saturation: out["saturation"], contrast: out["contrast"], features } };
-        }
-        console.error(`Gemini returned unexpected values (${model})`, text.slice(0, 300));
-      } catch (error) {
-        console.error(`Could not parse Gemini response (${model})`, error);
-      }
+    // Only paid results are analysed; an already analysed one is left as it is.
+    const { data: row, error } = await admin.from("results").select("is_paid, answers, report").eq("id", data.resultId).maybeSingle<{ is_paid: boolean; answers: Answers; report: { palette?: unknown } }>();
+    if (error || !row) {
+      console.error("Could not load result for analysis", data.resultId, error);
+      return { ok: false, problem: "unavailable" };
     }
-    return { ok: false, problem: "unavailable" };
+    if (!row.is_paid) return { ok: false, problem: "not_paid" };
+    if (Array.isArray(row.report?.palette)) return { ok: true };
+
+    const text = (id: string) => (typeof row.answers[id] === "string" ? (row.answers[id] as string).slice(0, 80) : "");
+    const context: Context = { gender: text("gender"), naturalHair: text("naturalHair"), eyes: text("eyes"), currentHair: text("currentHair") || text("dyedHair") };
+
+    const result = await runGemini(data.image, context);
+    if (!result.ok) return result;
+    const report = buildColorReport(result.analysis, row.answers);
+    let { error: saveError } = await admin.from("results").update({ report, photo_analysis: result.analysis }).eq("id", data.resultId);
+    // TEMPORARY: photo_analysis column missing until migration 0008 is applied.
+    if (saveError?.code === "PGRST204") ({ error: saveError } = await admin.from("results").update({ report }).eq("id", data.resultId));
+    if (saveError) {
+      console.error("Could not save analysed report", data.resultId, saveError);
+      return { ok: false, problem: "unavailable" };
+    }
+    return { ok: true };
   });
+
+async function runGemini(image: string, context: Context): Promise<{ ok: true; analysis: PhotoAnalysis } | { ok: false; problem: PhotoProblem | "unavailable" | "rate_limited" | "daily_limit" }> {
+  const apiKey = process.env["GEMINI_API_KEY"];
+  if (!apiKey) {
+    if (import.meta.env.DEV) {
+      console.warn("GEMINI_API_KEY is not set — using a fake photo analysis (development only).");
+      return { ok: true, analysis: demoAnalysis(image) };
+    }
+    console.error("GEMINI_API_KEY is not set");
+    return { ok: false, problem: "unavailable" };
+  }
+
+  // Cost protection before the paid call: per-visitor and site-wide daily limits.
+  const { checkAndRecordAnalysis } = await import("@/lib/rate-limit");
+  const { getRequestIP } = await import("@tanstack/react-start/server");
+  const limit = await checkAndRecordAnalysis(getRequestIP({ xForwardedFor: true }));
+  if (limit !== "ok") return { ok: false, problem: limit };
+
+  // Primary model, then fallbacks if Google is overloaded (503/429), errors or is slow.
+  // Benchmarked Oct 2026: gemini-3.5-flash ~4 s and matches the newest model; 3.8-flash took 45-60 s.
+  const models = [
+    process.env["GEMINI_MODEL"] || "gemini-3.5-flash",
+    process.env["GEMINI_FALLBACK_MODEL"] || "gemini-2.5-flash",
+    "gemini-3.1-flash-lite",
+  ];
+  // Overload errors come back in under a second, so a short pause + retry is cheap.
+  const attempts = models.flatMap((model) => [{ model, wait: 0 }, { model, wait: 1200 }]);
+  const deadline = Date.now() + 40_000;
+  // Gemini 2.x sets thinking with a token budget, 3.x with a level; keep it low for speed.
+  const body = (model: string) =>
+    JSON.stringify({
+      contents: [{ role: "user", parts: [{ inline_data: { mime_type: "image/jpeg", data: image } }, { text: prompt(context) }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema,
+        temperature: 0.2,
+        thinkingConfig: model.startsWith("gemini-2") ? { thinkingBudget: 512 } : { thinkingLevel: "low" },
+      },
+    });
+
+  for (const { model, wait } of attempts) {
+    if (Date.now() + wait > deadline) break;
+    if (wait) await new Promise((r) => setTimeout(r, wait));
+    let response: Response;
+    try {
+      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+        body: body(model),
+        signal: AbortSignal.timeout(Math.max(3_000, Math.min(20_000, deadline - Date.now()))),
+      });
+    } catch (error) {
+      console.error(`Gemini request failed (${model})`, error);
+      continue;
+    }
+
+    if (!response.ok) {
+      console.error(`Gemini error (${model})`, response.status, (await response.text()).slice(0, 300));
+      continue; // 503/429 (overloaded) and 5xx: retry/fall back; 4xx config errors fail the same way on every attempt
+    }
+
+    try {
+      const json = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+      const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+      const out = JSON.parse(text) as Record<string, unknown>;
+      if (out["usable"] === false) {
+        return { ok: false, problem: oneOf(PROBLEMS, out["problem"]) ? out["problem"] : "no_face" };
+      }
+      if (oneOf(TEMPERATURES, out["temperature"]) && oneOf(DEPTHS, out["depth"]) && oneOf(SATURATIONS, out["saturation"]) && oneOf(CONTRASTS, out["contrast"])) {
+        // Feature colours are optional extras: invalid ones are dropped and the quiz answers fill in.
+        const feature = (hex: unknown, name: unknown) =>
+          isHex(hex) ? { hex: hex.toLowerCase(), name: typeof name === "string" ? name.slice(0, 40).toLowerCase() : "" } : undefined;
+        const features = {
+          eyes: feature(out["eyeHex"], out["eyeName"]),
+          hair: feature(out["hairHex"], out["hairName"]),
+          skin: feature(out["skinHex"], out["skinName"]),
+        };
+        return { ok: true, analysis: { temperature: out["temperature"], depth: out["depth"], saturation: out["saturation"], contrast: out["contrast"], features } };
+      }
+      console.error(`Gemini returned unexpected values (${model})`, text.slice(0, 300));
+    } catch (error) {
+      console.error(`Could not parse Gemini response (${model})`, error);
+    }
+  }
+  return { ok: false, problem: "unavailable" };
+}

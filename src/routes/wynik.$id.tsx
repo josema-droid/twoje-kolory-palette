@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, LockKeyhole, Sparkles, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { getResult, getTeaser } from "@/lib/api";
-import type { Teaser } from "@/content/teaser";
+import { analyzePaidResult, getResult, getTeaser, isAnalysed, PhotoRejected, storedPhoto } from "@/lib/api";
+import { previewPalette, type Teaser } from "@/content/teaser";
+import { GENDER_MALE } from "@/content/funnel";
 import { createCheckoutSession } from "@/lib/checkout";
 import { trackEvent } from "@/lib/tracking";
 import type { ColorRecommendation } from "@/content/engine";
@@ -42,6 +43,66 @@ function Pills({ items }: { items: string[] }) {
         <span key={item} className="rounded-full border border-border bg-card px-3 py-1.5 text-sm text-foreground">{item}</span>
       ))}
     </div>
+  );
+}
+
+type AnalysisState = { step: "running" } | { step: "needPhoto"; problem?: string };
+
+/** After payment: analyse the photo kept in this browser, or ask for one (missing or unusable). */
+function PaidAnalysis({ resultId, male, onDone }: { resultId: string; male: boolean; onDone: (result: Result) => void }) {
+  const t = pl.result;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [state, setState] = useState<AnalysisState>({ step: "running" });
+  const [file, setFile] = useState<File | null>(null);
+  const run = async (photo: string | File) => {
+    setState({ step: "running" });
+    try {
+      onDone(await analyzePaidResult(resultId, photo));
+      trackEvent("PhotoAnalyzed");
+    } catch (e) {
+      const problem = e instanceof PhotoRejected ? e.problem : "unavailable";
+      if (!(e instanceof PhotoRejected)) console.error(e);
+      trackEvent("PhotoRejected", { problem });
+      setState({ step: "needPhoto", problem });
+    }
+  };
+  useEffect(() => {
+    const photo = storedPhoto(resultId);
+    if (photo) void run(photo);
+    else setState({ step: "needPhoto" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultId]);
+
+  if (state.step === "running") {
+    return (
+      <main className="flex min-h-[70vh] items-center justify-center px-5 text-center">
+        <div>
+          <div className="analysis-pulse mx-auto flex size-24 items-center justify-center rounded-full bg-secondary text-primary"><Sparkles size={38} strokeWidth={1.4} /></div>
+          <h1 className="mt-9 font-display text-4xl md:text-5xl">{t.analysingTitle}</h1>
+          <p className="mx-auto mt-4 max-w-md text-muted-foreground">{t.analysingText}</p>
+        </div>
+      </main>
+    );
+  }
+  const errors = pl.photo.errors as Record<string, string>;
+  // Technical problems (not the photo's fault): offer to retry with the same photo.
+  const technical = state.problem === "unavailable" || state.problem === "rate_limited" || state.problem === "daily_limit" || state.problem === "not_paid";
+  const saved = technical ? storedPhoto(resultId) : null;
+  const message = !state.problem ? t.photoNeededText : technical ? errors[state.problem] : `${errors[state.problem] ?? errors["unavailable"]} ${t.photoRetryText}`;
+  return (
+    <main className="mx-auto min-h-[65vh] max-w-xl px-5 py-16 text-center md:py-24">
+      <h1 className="font-display text-4xl md:text-5xl">{saved ? t.analysisFailedTitle : t.photoNeededTitle}</h1>
+      <p className="mt-4 leading-7 text-muted-foreground">{message}</p>
+      {saved && <Button className="mt-8 h-14 w-full max-w-sm rounded-full text-base" onClick={() => run(saved)}>{t.retry}</Button>}
+      <input ref={inputRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f?.type.startsWith("image/")) setFile(f); }} />
+      <Button variant="outline" className="mt-8 h-12 rounded-full border-primary/35 px-7 text-primary" onClick={() => inputRef.current?.click()}>
+        {file ? file.name : t.photoChoose}
+      </Button>
+      <div>
+        <Button className="mt-4 h-14 w-full max-w-sm rounded-full text-base" disabled={!file} onClick={() => file && run(file)}>{t.photoAnalyse}<Sparkles size={17} /></Button>
+      </div>
+      <p className="mt-6 text-xs text-muted-foreground">{male ? pl.photo.tipsMale.join(" · ") : pl.photo.tips.join(" · ")}</p>
+    </main>
   );
 }
 
@@ -90,7 +151,7 @@ function ResultPage() {
   if (!result) return <main className="mx-auto min-h-[65vh] max-w-4xl px-5 py-20"><h1 className="font-display text-4xl">{pl.result.missing}</h1><Button asChild className="mt-8 rounded-full"><Link to="/">{pl.backHome}</Link></Button></main>;
   const t = pl.result;
   const { report } = result;
-  const male = report.gender === "male";
+  const male = result.answers["gender"] === GENDER_MALE || report.gender === "male";
   const account = (
     <>
         {user === null && !result.userId && (
@@ -110,6 +171,9 @@ function ResultPage() {
         )}
     </>
   );
+  // Paid, but the photo hasn't been analysed yet: that happens now, only after payment.
+  if (result.isPaid && !isAnalysed(result)) return <PaidAnalysis resultId={result.id} male={male} onDone={setResult} />;
+  const preview = isAnalysed(result) ? report.palette : previewPalette(result.answers);
   if (result.isPaid && report.dashboard) {
     return (
       <>
@@ -243,11 +307,11 @@ function ResultPage() {
                   </div>
                 </>
               ) : (
-                <div className="mt-7"><Swatches colors={report.palette.slice(0, 3)} /></div>
+                <div className="mt-7"><Swatches colors={preview.slice(0, 3)} /></div>
               )}
               <div className="relative mt-9 overflow-hidden rounded-lg border border-border bg-card p-5">
                 <div aria-hidden="true" className="pointer-events-none grid grid-cols-3 gap-4 blur-lg sm:grid-cols-5">
-                  {report.palette.slice(3).map((color) => <div key={color.name} className="aspect-square rounded-md" style={{ backgroundColor: color.hex }} />)}
+                  {preview.slice(3).map((color) => <div key={color.name} className="aspect-square rounded-md" style={{ backgroundColor: color.hex }} />)}
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center bg-card/45">
                   <div className="flex flex-col items-center gap-2 text-center">
