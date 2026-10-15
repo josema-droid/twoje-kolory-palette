@@ -288,6 +288,19 @@ function ResultPage() {
           </div>
         ) : (
           <>
+            <section className="mb-14 rounded-lg border border-primary/25 bg-card p-6 md:p-8">
+              <h2 className="font-display text-3xl md:text-4xl">{t.pitchTitle}</h2>
+              <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">{t.pitchText}</p>
+              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                {(male ? t.pitchItemsMale : t.pitchItems).map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm leading-6"><span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-primary"><Check size={13} /></span>{item}</li>
+                ))}
+              </ul>
+              <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
+                <Button asChild className="h-13 rounded-full px-8 text-base"><a href="#odblokuj">{t.pitchCta}<ArrowRight size={17} /></a></Button>
+                <p className="text-xs text-muted-foreground">{t.pitchPrice}</p>
+              </div>
+            </section>
             <section>
               <h2 className="font-display text-3xl md:text-4xl">{t.teaserPalette}</h2>
               {teaser ? (
@@ -321,7 +334,7 @@ function ResultPage() {
                 </div>
               </div>
             </section>
-            <section className="mx-auto mt-16 max-w-xl border-t border-border pt-12 text-center">
+            <section id="odblokuj" className="mx-auto mt-16 max-w-xl scroll-mt-24 border-t border-border pt-12 text-center">
               <h2 className="font-display text-4xl">{t.unlockTitle}</h2>
               <p className="mt-4 leading-7 text-muted-foreground">{male ? t.unlockTextMale : t.unlockText}</p>
               <label className="mt-8 flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-4 text-left">

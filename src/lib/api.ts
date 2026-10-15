@@ -156,8 +156,10 @@ export async function getTeaser(answers: Answers): Promise<Teaser> {
     .select("summary, colors")
     .match(key)
     .maybeSingle<Teaser>();
-  // Table missing (migration not applied) or row not found: compute it here instead.
-  return data?.colors?.length ? data : buildTeaser(key.eyes, key.hair, key.undertone);
+  // Table missing, row not found, or text garbled by a bad copy-paste (e.g. "ł" shown as "≈Ç"):
+  // compute it here instead.
+  const garbled = data && /[√≈∂ÄÃ]/.test(JSON.stringify(data));
+  return data?.colors?.length && !garbled ? data : buildTeaser(key.eyes, key.hair, key.undertone);
 }
 
 export type ResultSummary = Pick<Result, "id" | "isPaid"> & { createdAt: string };
