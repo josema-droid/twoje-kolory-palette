@@ -63,7 +63,7 @@ export const privacyPolicy = {
             "Google (Google Cloud / Gemini API) — analiza zdjęcia; Google Analytics — statystyki strony (tylko za Twoją zgodą).",
             "Vercel Inc. — hosting strony i serwerów aplikacji.",
             "Supabase Inc. — baza danych z wynikami analiz oraz obsługa kont.",
-            "Resend — wysyłka wiadomości e-mail (np. kodów weryfikacyjnych).",
+            "Resend — wysyłka wiadomości e-mail (kodów weryfikacyjnych i potwierdzeń zamówień).",
           ],
         },
         "W raporcie mogą pojawić się zdjęcia znanych osób na wolnych licencjach z Wikimedia Commons (Wikimedia Foundation). Wyświetlając je, Twoja przeglądarka łączy się bezpośrednio z serwerami Wikimedia, które otrzymują m.in. Twój adres IP — zgodnie z polityką prywatności Wikimedia.",

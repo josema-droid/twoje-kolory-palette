@@ -93,6 +93,24 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
         console.error("Failed to mark result as paid", resultId, error);
         return new Response("Could not mark result as paid", { status: 500 });
       }
+      // Order confirmation (required: it confirms the withdrawal waiver on a durable medium).
+      const email = session.customer_details?.email;
+      if (email) {
+        const { sendOrderEmail } = await import("./lib/order-email");
+        const sent = await sendOrderEmail({
+          to: email,
+          resultId,
+          stripeSessionId: session.id,
+          paidAt: new Date(event.created * 1000),
+          consentAt: consentAt ? new Date(consentAt) : null,
+          termsVersion: session.metadata?.["termsVersion"] ?? null,
+          amount: session.amount_total,
+        });
+        // Non-2xx makes Stripe retry; the idempotency key prevents a duplicate email.
+        if (!sent) return new Response("Could not send order confirmation", { status: 500 });
+      } else {
+        console.error("Paid Stripe checkout session has no customer email", session.id);
+      }
     } else {
       console.error("Paid Stripe checkout session missing resultId metadata", session.id);
     }
