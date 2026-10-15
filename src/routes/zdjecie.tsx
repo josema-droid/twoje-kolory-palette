@@ -34,6 +34,7 @@ function PhotoPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [checks, setChecks] = useState<Partial<Record<CheckKey, boolean>>>({});
   const [consent, setConsent] = useState(false);
+  const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => setAnswers(readAnswers()), []);
@@ -55,7 +56,7 @@ function PhotoPage() {
   };
 
   const submit = async () => {
-    if (!file || !consent || !allChecked) return;
+    if (!file || !consent || !terms || !allChecked) return;
     setLoading(true);
     const photoChecks = checkKeys.map((k) => `${t.checks[k].q} ${checks[k] ? t.yes : t.no}`);
     try {
@@ -146,9 +147,21 @@ function PhotoPage() {
           )}
 
           <div className="mt-5 rounded-lg border border-border bg-card p-4">
+            {/* Links open in a new tab, so the chosen photo and answers aren't lost. */}
             <label className="flex cursor-pointer items-start gap-3">
+              <Checkbox checked={terms} onCheckedChange={(v) => setTerms(v === true)} className="mt-0.5" />
+              <span className="text-xs leading-5 text-foreground/85">
+                {t.termsBefore}
+                <a href="/regulamin" target="_blank" rel="noopener" className="font-medium text-primary underline underline-offset-2">{t.termsLink}</a>
+              </span>
+            </label>
+            <label className="mt-3 flex cursor-pointer items-start gap-3">
               <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
-              <span className="text-xs leading-5 text-foreground/85">{t.consent}</span>
+              <span className="text-xs leading-5 text-foreground/85">
+                {t.consentBefore}
+                <a href="/polityka-prywatnosci#zdjecie" target="_blank" rel="noopener" className="font-medium text-primary underline underline-offset-2">{t.consentLink}</a>
+                {t.consentAfter}
+              </span>
             </label>
             <p className="mt-2 flex gap-2 pl-7 text-xs leading-5 text-muted-foreground">
               <ShieldCheck size={14} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
@@ -160,7 +173,7 @@ function PhotoPage() {
             </p>
           </div>
           {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-          <Button className="mt-5 h-14 w-full rounded-full text-base" disabled={!file || !consent || !allChecked} onClick={submit}>{t.submit}<Sparkles size={17} /></Button>
+          <Button className="mt-5 h-14 w-full rounded-full text-base" disabled={!file || !consent || !terms || !allChecked} onClick={submit}>{t.submit}<Sparkles size={17} /></Button>
         </section>
       </div>
     </main>

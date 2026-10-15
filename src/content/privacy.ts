@@ -1,11 +1,10 @@
 // Polityka prywatności — DRAFT do weryfikacji przez prawnika.
-// Pola w [NAWIASACH KWADRATOWYCH] trzeba uzupełnić przed publikacją.
 
 type Block = string | { list: string[] };
 export type PrivacySection = { id: string; title: string; body: Block[] };
 
 export const privacyPolicy = {
-  updated: "6 października 2026 r.",
+  updated: "15 października 2026 r.",
   intro:
     "Szanujemy Twoją prywatność. Poniżej wyjaśniamy prostym językiem, jakie dane zbieramy, po co, jak długo je przechowujemy, komu je powierzamy i jakie masz prawa. Szczególnie dokładnie opisujemy, co dzieje się ze zdjęciem, które dodajesz do analizy.",
   sections: [
@@ -13,7 +12,7 @@ export const privacyPolicy = {
       id: "administrator",
       title: "1. Kto jest administratorem Twoich danych",
       body: [
-        "Administratorem Twoich danych osobowych jest [NAZWA FIRMY / IMIĘ I NAZWISKO PRZEDSIĘBIORCY], [ADRES], NIP [NIP], REGON [REGON] (dalej: „Twój Color”, „my”).",
+        "Administratorem Twoich danych osobowych jest Norse Technologies, Banevingen 30, 2200 Kopenhaga, Dania (dalej: „Twój Color”, „my”).",
         "We wszystkich sprawach dotyczących danych osobowych możesz pisać na adres: info@twojcolor.com.",
       ],
     },
@@ -87,7 +86,7 @@ export const privacyPolicy = {
         {
           list: [
             "Zdjęcie — nie zapisujemy go; jest usuwane po zakończeniu analizy, nie później niż w ciągu 24 godzin.",
-            "Odpowiedzi w teście i wynik analizy — do czasu usunięcia konta lub Twojego żądania usunięcia; wyniki niezapisane na koncie — przez [OKRES, np. 24 miesiące] od ich utworzenia.",
+            "Odpowiedzi w teście i wynik analizy — do czasu usunięcia konta lub Twojego żądania usunięcia; wyniki niezapisane na koncie — przez 24 miesiące od ich utworzenia.",
             "Konto — do czasu jego usunięcia.",
             "Dokumenty związane z płatnościami — przez 5 lat od końca roku podatkowego, zgodnie z przepisami podatkowymi.",
             "Hash adresu IP (ochrona przed nadużyciami) — maksymalnie 2 dni.",

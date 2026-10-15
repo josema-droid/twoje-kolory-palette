@@ -246,7 +246,12 @@ export const pl = {
     uploadHint: "Wybierz z galerii lub zrób zdjęcie telefonem",
     change: "Zmień zdjęcie",
     tipsMale: ["W dziennym świetle", "Bez filtra", "Z widocznymi włosami i zarostem", "Na neutralnym tle"],
-    consent: "Wyrażam zgodę na analizę mojego zdjęcia przez AI (Google Gemini) wyłącznie w celu przygotowania mojej analizy kolorystycznej.",
+    termsBefore: "Akceptuję ",
+    termsLink: "regulamin",
+    // Details of the AI processing (Google Gemini) live behind the link, in the privacy policy.
+    consentBefore: "Wyrażam zgodę na ",
+    consentLink: "analizę mojego zdjęcia",
+    consentAfter: ".",
     privacyNote: "Dbamy o Twoją prywatność: do chwili zapłaty zdjęcie zostaje tylko na Twoim urządzeniu. Analizujemy je dopiero po zakupie i nie zapisujemy go.",
     privacyLink: "Przeczytaj politykę prywatności",
     checksTitle: "Sprawdź swoje zdjęcie",

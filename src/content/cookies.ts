@@ -1,10 +1,9 @@
 // Polityka cookies — DRAFT for review by a Polish-qualified lawyer.
-// Fields in [SQUARE BRACKETS] must be filled in before relying on it.
 import type { LegalDoc } from "@/components/legal-document";
 
 export const cookiesDoc: LegalDoc = {
   title: "Polityka cookies",
-  updated: "14 października 2026 r.",
+  updated: "15 października 2026 r.",
   sections: [
     {
       id: "co-zapisujemy",
@@ -42,13 +41,13 @@ export const cookiesDoc: LegalDoc = {
       id: "uslugi-zewnetrzne",
       title: "3. Usługi zewnętrzne, zmiany i kontakt",
       body: [
-        "**Google Analytics** dostarcza Google Ireland Limited. Dane mogą trafiać do Google LLC w USA, na podstawie unijno-amerykańskich Ram Prywatności Danych (EU-US Data Privacy Framework) dla certyfikowanych firm albo standardowych klauzul umownych. Dane analityczne przechowujemy [14 miesięcy — potwierdź w ustawieniach Google Analytics].",
-        "**Konto i baza danych.** Logowanie i zapis wyników obsługuje Supabase [region: potwierdź]. Zapisuje ono w Twojej przeglądarce tylko wpis potrzebny do utrzymania sesji.",
+        "**Google Analytics** dostarcza Google Ireland Limited. Dane mogą trafiać do Google LLC w USA, na podstawie unijno-amerykańskich Ram Prywatności Danych (EU-US Data Privacy Framework) dla certyfikowanych firm albo standardowych klauzul umownych. Dane analityczne przechowujemy przez 14 miesięcy.",
+        "**Konto i baza danych.** Logowanie i zapis wyników obsługuje Supabase, na serwerach w Unii Europejskiej (Irlandia). Zapisuje ono w Twojej przeglądarce tylko wpis potrzebny do utrzymania sesji.",
         "**Czcionki** ładujemy z usługi Google Fonts. Wyświetlając stronę, Twoja przeglądarka łączy się z serwerami Google (fonts.googleapis.com i fonts.gstatic.com), które otrzymują przy tym Twój adres IP.",
         "**Zmiany.** Gdy zmienimy rodzaj plików, zaktualizujemy tę politykę i zapytamy o zgodę ponownie, jeśli zmiana tego wymaga.",
-        "**Kontakt.** Pytania o cookies: **info@twojcolor.com**. Więcej o danych osobowych znajdziesz w Polityce prywatności. Administratorem jest [PEŁNA NAZWA FIRMY / imię i nazwisko przedsiębiorcy, CVR].",
+        "**Kontakt.** Pytania o cookies: **info@twojcolor.com**. Więcej o danych osobowych znajdziesz w Polityce prywatności. Administratorem jest Norse Technologies, Banevingen 30, 2200 Kopenhaga, Dania.",
       ],
     },
   ],
-  footer: "Obowiązuje od: [DATA]. Wersja 1.0.",
+  footer: "Obowiązuje od: 15 października 2026 r. Wersja 1.0.",
 };
