@@ -3,7 +3,7 @@
 // Page views: GA's own page_view on load, plus "page changes based on browser
 // history events" (Enhanced measurement, on by default) for in-app navigation.
 
-const GA_ID = "G-LGGB646JRG";
+const GA_ID = "G-4P9YLE38LP";
 
 type Gtag = (...args: unknown[]) => void;
 declare global {

@@ -13,6 +13,13 @@ create table if not exists public.teaser_palettes (
   primary key (eyes, hair, undertone)
 );
 
+-- Recreated so it always holds the correct Polish values (a garbled copy-paste
+-- of an earlier version saved it with broken letters).
+alter table public.teaser_palettes drop constraint if exists teaser_palettes_undertone_check;
+delete from public.teaser_palettes;
+alter table public.teaser_palettes add constraint teaser_palettes_undertone_check
+  check (undertone in (E'ciep\u0142y', E'ch\u0142odny', 'neutralny'));
+
 alter table public.teaser_palettes enable row level security;
 
 -- Public, non-personal content: anyone may read, nobody may write via the API.
@@ -21,8 +28,6 @@ create policy "teaser palettes are public"
   on public.teaser_palettes for select
   using (true);
 revoke insert, update, delete on public.teaser_palettes from anon, authenticated;
-
-delete from public.teaser_palettes;
 
 insert into public.teaser_palettes (eyes, hair, undertone, summary, colors) values
   (E'Jasnoniebieski', E'Bardzo jasny blond', E'ciep\u0142y', E'Twoje odpowiedzi wskazuj\u0105 na ciep\u0142\u0105 temperatur\u0119 urody i jasny koloryt. Te 4 kolory to dopiero pocz\u0105tek \u2014 pe\u0142na analiza ze zdj\u0119cia pokazuje ca\u0142\u0105 palet\u0119.', E'[{"name":"morelowy","hex":"#DD906A","role":"Podkre\u015bla oczy","why":"Le\u017cy po przeciwnej stronie ko\u0142a barw ni\u017c kolor Twoich oczu (jasnoniebieski). Noszony przy twarzy sprawia, \u017ce t\u0119cz\u00f3wki wydaj\u0105 si\u0119 ja\u015bniejsze i bardziej wyraziste."},{"name":"camel","hex":"#B88A57","role":"Roz\u015bwietla cer\u0119","why":"Ma t\u0119 sam\u0105 ciep\u0142\u0105, z\u0142ocist\u0105 baz\u0119 co Twoja sk\u00f3ra, wi\u0119c odbija na twarz ciep\u0142e \u015bwiat\u0142o i o\u017cywia cer\u0119."},{"name":"denim","hex":"#5A718A","role":"Oprawa dla w\u0142os\u00f3w","why":"Tworzy przemy\u015blany kontrast z Twoimi w\u0142osami (bardzo jasny blond), dzi\u0119ki czemu ich kolor wygl\u0105da na g\u0142\u0119bszy i bardziej szlachetny."},{"name":"jasny be\u017c","hex":"#DCC9AD","role":"Tw\u00f3j neutral","why":"Tw\u00f3j neutral o ciep\u0142ej temperaturze \u2014 lepsza baza ni\u017c czer\u0144 czy szaro\u015b\u0107 na p\u0142aszcz, marynark\u0119 i spodnie."}]'::jsonb),

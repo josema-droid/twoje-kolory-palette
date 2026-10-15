@@ -31,6 +31,13 @@ create table if not exists public.teaser_palettes (
   primary key (eyes, hair, undertone)
 );
 
+-- Recreated so it always holds the correct Polish values (a garbled copy-paste
+-- of an earlier version saved it with broken letters).
+alter table public.teaser_palettes drop constraint if exists teaser_palettes_undertone_check;
+delete from public.teaser_palettes;
+alter table public.teaser_palettes add constraint teaser_palettes_undertone_check
+  check (undertone in (E'ciep\\u0142y', E'ch\\u0142odny', 'neutralny'));
+
 alter table public.teaser_palettes enable row level security;
 
 -- Public, non-personal content: anyone may read, nobody may write via the API.
@@ -39,8 +46,6 @@ create policy "teaser palettes are public"
   on public.teaser_palettes for select
   using (true);
 revoke insert, update, delete on public.teaser_palettes from anon, authenticated;
-
-delete from public.teaser_palettes;
 
 insert into public.teaser_palettes (eyes, hair, undertone, summary, colors) values
 ${rows.join(",\n")}
