@@ -82,7 +82,7 @@ export const HAIR_HEX: Record<string, string> = {
   "Bardzo jasny blond": "#e6d2a8", "Jasny blond": "#d4b57e", "Ciemny blond": "#a98657", "Jasny brąz": "#8a6440", "Średni brąz": "#64462e",
   "Ciemny brąz": "#3f2a1d", Czarny: "#1e1a18", "Rudy lub miedziany": "#a9522a", "Częściowo siwe": "#8e8a86", "Siwe lub srebrne": "#c9c7c4",
 };
-const SKIN_HEX: Record<"warm" | "neutral" | "cool", Record<Depth, string>> = {
+export const SKIN_HEX: Record<"warm" | "neutral" | "cool", Record<Depth, string>> = {
   warm: { jasna: "#f2d3b6", średnia: "#d9a882", głęboka: "#8e5a3a" },
   neutral: { jasna: "#efd0bd", średnia: "#cfa088", głęboka: "#85573f" },
   cool: { jasna: "#f1d1c7", średnia: "#cc9c8f", głęboka: "#7a4f45" },

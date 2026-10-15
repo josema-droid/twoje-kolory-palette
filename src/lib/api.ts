@@ -4,6 +4,7 @@ import { buildColorReport, type ColorReport, type PhotoAnalysis } from "@/conten
 import { analyzeFacePhoto, type PhotoProblem } from "@/lib/photo-analysis";
 import type { Answers } from "@/content/funnel";
 import type { Result } from "@/types/result";
+import { buildTeaser, teaserKey, type Teaser } from "@/content/teaser";
 
 type ResultRow = {
   id: string;
@@ -122,6 +123,18 @@ export async function getResult(id: string): Promise<Result | null> {
   }
   if (error) throw error;
   return data ? fromRow(data) : null;
+}
+
+/** The free 4-colour teaser for these quiz answers (table teaser_palettes, migration 0009). */
+export async function getTeaser(answers: Answers): Promise<Teaser> {
+  const key = teaserKey(answers);
+  const { data } = await supabase
+    .from("teaser_palettes")
+    .select("summary, colors")
+    .match(key)
+    .maybeSingle<Teaser>();
+  // Table missing (migration not applied) or row not found: compute it here instead.
+  return data?.colors?.length ? data : buildTeaser(key.eyes, key.hair, key.undertone);
 }
 
 export type ResultSummary = Pick<Result, "id" | "isPaid"> & { createdAt: string };

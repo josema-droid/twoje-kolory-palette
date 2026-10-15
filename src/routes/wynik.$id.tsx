@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { getResult } from "@/lib/api";
+import { getResult, getTeaser } from "@/lib/api";
+import type { Teaser } from "@/content/teaser";
 import { createCheckoutSession } from "@/lib/checkout";
 import { trackEvent } from "@/lib/tracking";
 import type { ColorRecommendation } from "@/content/engine";
@@ -53,6 +54,13 @@ function ResultPage() {
   const [busy, setBusy] = useState(false);
   const [downloadNote, setDownloadNote] = useState(false);
   const user = useAuthUser();
+  const [teaser, setTeaser] = useState<Teaser | null>(null);
+  useEffect(() => {
+    if (!result || result.isPaid) return;
+    let active = true;
+    getTeaser(result.answers).then((t) => { if (active) setTeaser(t); }).catch(() => {});
+    return () => { active = false; };
+  }, [result]);
   useEffect(() => {
     let active = true;
     const justPaid = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("paid") === "1";
@@ -218,7 +226,25 @@ function ResultPage() {
           <>
             <section>
               <h2 className="font-display text-3xl md:text-4xl">{t.teaserPalette}</h2>
-              <div className="mt-7"><Swatches colors={report.palette.slice(0, 3)} /></div>
+              {teaser ? (
+                <>
+                  <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">{teaser.summary}</p>
+                  <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                    {teaser.colors.map((c) => (
+                      <div key={c.name} className="flex gap-4 rounded-lg border border-border bg-card p-4">
+                        <div className="size-20 shrink-0 rounded-md border border-border/50" style={{ backgroundColor: c.hex }} />
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold uppercase tracking-[.16em] text-primary">{c.role}</p>
+                          <p className="mt-1 font-display text-xl leading-tight">{c.name}</p>
+                          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{c.why}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-7"><Swatches colors={report.palette.slice(0, 3)} /></div>
+              )}
               <div className="relative mt-9 overflow-hidden rounded-lg border border-border bg-card p-5">
                 <div aria-hidden="true" className="pointer-events-none grid grid-cols-3 gap-4 blur-lg sm:grid-cols-5">
                   {report.palette.slice(3).map((color) => <div key={color.name} className="aspect-square rounded-md" style={{ backgroundColor: color.hex }} />)}

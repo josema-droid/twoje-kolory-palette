@@ -317,7 +317,7 @@ export const pl = {
     eyebrow: "TWOJA ANALIZA KOLORYSTYCZNA",
     teaserHeadline: "Twoja paleta jest gotowa",
     teaserSubtitle: "Oto pierwsze kolory z Twojej analizy. Pełny raport — z makijażem, włosami i przykładową stylizacją — czeka poniżej.",
-    teaserPalette: "Pierwsze kolory z Twojej palety",
+    teaserPalette: "Twoje 4 kolory na start",
     hidden: "Twoja pełna paleta czeka na odkrycie",
     unlockTitle: "Poznaj całą swoją paletę.",
     unlockText: "Odkryj pełną paletę, dobór bieli, czerni i metalu, rekomendacje makijażu i włosów oraz przykładową stylizację.",

@@ -14,7 +14,7 @@ export type Question = {
   when?: (answers: Answers) => boolean;
 };
 
-const eyeColors = [
+export const eyeColors = [
   "Jasnoniebieski",
   "Niebieski",
   "Szaroniebieski",
@@ -30,7 +30,7 @@ const eyeColors = [
   "Inny lub trudny do określenia",
 ];
 
-const naturalHair = [
+export const naturalHair = [
   "Bardzo jasny blond",
   "Jasny blond",
   "Ciemny blond",
@@ -684,7 +684,7 @@ export const MEN_GOAL_IMAGE = "Zdjęcia, wizerunek i marka osobista";
 export const MEN_GOAL_ALL = "Chcę poznać całą swoją paletę";
 
 const menGoal = (a: Answers, ...goals: string[]) => goals.includes(String(a["goal"] ?? ""));
-const MEN_SHAVED_HEAD = "Ogolona głowa lub łysienie";
+export const MEN_SHAVED_HEAD = "Ogolona głowa lub łysienie";
 const MEN_NO_BEARD = "Nie, golę się na gładko";
 const hasBeard = (a: Answers) => !!a["beard"] && a["beard"] !== MEN_NO_BEARD;
 const dyesHair = (a: Answers) => !!a["dyedHair"] && a["dyedHair"] !== "Nie, mam naturalny kolor";
