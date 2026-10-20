@@ -19,7 +19,7 @@ export const Route = createFileRoute("/weryfikacja")({
   // purpose: "signup" confirms a new account (default), "recovery" leads on to /nowe-haslo.
   validateSearch: (search: Record<string, unknown>): { email: string; purpose?: CodePurpose | undefined; redirect?: string | undefined } => ({
     email: typeof search["email"] === "string" ? search["email"] : "",
-    purpose: search["purpose"] === "recovery" ? "recovery" : undefined,
+    purpose: search["purpose"] === "recovery" || search["purpose"] === "login" ? search["purpose"] : undefined,
     redirect: safeRedirect(search["redirect"]),
   }),
   head: () => seo({ title: "Weryfikacja adresu e-mail", description: "Wpisz kod z wiadomości e-mail, aby potwierdzić swoje konto w Twój Color.", path: "/weryfikacja", noindex: true }),
@@ -30,7 +30,7 @@ function VerifyPage() {
   const t = pl.auth.verify;
   const { email, purpose = "signup", redirect } = Route.useSearch();
   const recovery = purpose === "recovery";
-  const copy = recovery ? { ...t, ...t.recovery } : t;
+  const copy = recovery ? { ...t, ...t.recovery } : purpose === "login" ? { ...t, ...t.login } : t;
   const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -67,7 +67,7 @@ function VerifyPage() {
 
   if (!email) return <AuthShell eyebrow={t.eyebrow} title={t.title} subtitle={t.missingEmail}><Button asChild className="h-14 w-full rounded-full text-base"><Link to="/logowanie">{pl.auth.login.submit}<ArrowRight size={17} /></Link></Button></AuthShell>;
 
-  return <AuthShell eyebrow={t.eyebrow} title={t.title} subtitle={<>{copy.sentTo} <strong className="font-semibold break-all text-foreground">{email}</strong></>} footer={<>{copy.wrongEmail} <Link to={recovery ? "/nie-pamietam-hasla" : "/rejestracja"} search={{ redirect }} className="font-semibold text-primary hover:underline">{copy.wrongEmailLink}</Link></>}>
+  return <AuthShell eyebrow={t.eyebrow} title={copy.title} subtitle={<>{copy.sentTo} <strong className="font-semibold break-all text-foreground">{email}</strong></>} footer={<>{copy.wrongEmail} <Link to={recovery ? "/nie-pamietam-hasla" : purpose === "login" ? "/logowanie" : "/rejestracja"} search={{ redirect }} className="font-semibold text-primary hover:underline">{copy.wrongEmailLink}</Link></>}>
     <form onSubmit={submit} className="space-y-5">
       <div className="flex flex-col items-center"><span className="mb-4 flex size-12 items-center justify-center rounded-full bg-secondary text-primary"><MailCheck size={22} strokeWidth={1.6} /></span><label className="mb-3 block text-sm font-medium" htmlFor="otp">{t.codeLabel}</label>
         <InputOTP id="otp" maxLength={CODE_LENGTH} pattern={REGEXP_ONLY_DIGITS} inputMode="numeric" autoComplete="one-time-code" autoFocus value={code} onChange={setCode} onComplete={verify} disabled={busy}>

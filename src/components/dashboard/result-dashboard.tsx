@@ -87,7 +87,7 @@ export function ResultDashboard({ report, dashboard: d }: { report: ColorReport;
           <div className="dash-card dash-summary">{d.summary.map((p) => <p key={p}>{p}</p>)}</div>
         </DashSection>
 
-        <DashSection id="cechy" title={t.featuresTitle} intro={t.featuresIntro}>
+        <DashSection id="cechy" title={t.featuresTitle} intro={[d.features.eyes, d.features.hair, d.features.skin].every((f) => f.source === "quiz") ? t.featuresIntroQuiz : t.featuresIntro}>
           <div className="dash-grid-3">
             <FeatureCard label={t.features.eyes} enhanceLabel={t.enhanceLabel.eyes} feature={d.features.eyes} />
             <FeatureCard label={t.features.hair} enhanceLabel={t.enhanceLabel.hair} feature={d.features.hair} />

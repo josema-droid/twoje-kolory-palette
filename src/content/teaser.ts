@@ -116,6 +116,12 @@ export function buildTeaser(eyes: string, hair: string, undertone: Undertone): T
   return { summary, colors };
 }
 
+/** The colouring estimated from the answers alone (paid report for buyers who skip the photo). */
+export function estimateFromAnswers(answers: Answers): PhotoAnalysis {
+  const { eyes, hair, undertone } = teaserKey(answers);
+  return estimate(eyes, hair, undertone);
+}
+
 /** Rough palette from the answers, used only as the blurred "locked" preview before payment. */
 export function previewPalette(answers: Answers) {
   const { eyes, hair, undertone } = teaserKey(answers);

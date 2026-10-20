@@ -41,6 +41,18 @@ function LoginPage() {
       setError(authErrorMessage(err)); setBusy(false);
     }
   };
+  // Passwordless: accounts created on /analiza have no password.
+  const codeLogin = async () => {
+    const address = email.trim();
+    if (!address) { setError(t.codeNeedsEmail); return; }
+    setBusy(true); setError("");
+    try {
+      await sendEmailCode(address, "login");
+      await navigate({ to: "/weryfikacja", search: { email: address, purpose: "login", redirect } });
+    } catch (err) {
+      setError(authErrorMessage(err)); setBusy(false);
+    }
+  };
   return <AuthShell eyebrow={t.eyebrow} title={t.title} subtitle={redirect === "/zdjecie" ? t.subtitlePhoto : t.subtitle} footer={<>{t.switchText} <Link to="/rejestracja" search={redirect ? { redirect } : {}} className="font-semibold text-primary hover:underline">{t.switchLink}</Link></>}>
     <form onSubmit={submit} className="space-y-5">
       <Field label={pl.auth.email}>{(id) => <Input id={id} type="email" inputMode="email" autoComplete="email" placeholder={pl.auth.emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} required className={fieldClass} />}</Field>
@@ -48,6 +60,9 @@ function LoginPage() {
       <p className="-mt-2 text-right text-sm"><Link to="/nie-pamietam-hasla" search={{ redirect }} className="text-primary hover:underline">{t.forgot}</Link></p>
       {error && <FormMessage>{error}</FormMessage>}
       <Button type="submit" className="h-14 w-full rounded-full text-base" disabled={busy}>{t.submit}<ArrowRight size={17} /></Button>
+      <div className="flex items-center gap-3 text-xs uppercase tracking-[.2em] text-muted-foreground"><span className="h-px flex-1 bg-border" />{t.codeOr}<span className="h-px flex-1 bg-border" /></div>
+      <Button type="button" variant="outline" className="h-14 w-full rounded-full border-primary/35 text-base text-primary" disabled={busy} onClick={() => void codeLogin()}>{t.codeLogin}</Button>
+      <p className="-mt-3 text-center text-xs text-muted-foreground">{t.codeHint}</p>
     </form>
   </AuthShell>;
 }

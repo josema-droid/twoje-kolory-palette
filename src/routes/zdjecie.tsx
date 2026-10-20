@@ -4,10 +4,9 @@ import { Check, ImagePlus, Info, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { pl } from "@/content/pl";
-import { createResult, PhotoRejected } from "@/lib/api";
+import { savePendingAnalysis, PhotoRejected } from "@/lib/api";
 import { GENDER_MALE, type Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
-import { useAuthUser } from "@/hooks/use-auth-user";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/zdjecie")({
@@ -39,12 +38,6 @@ function PhotoPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => setAnswers(readAnswers()), []);
-  // Login is required before the photo step, so every result belongs to an account
-  // from the start. The quiz answers wait in sessionStorage during sign-up.
-  const user = useAuthUser();
-  useEffect(() => {
-    if (user === null) void navigate({ to: "/rejestracja", search: { redirect: "/zdjecie" }, replace: true });
-  }, [user, navigate]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   const male = answers["gender"] === GENDER_MALE;
@@ -62,15 +55,17 @@ function PhotoPage() {
     trackEvent("PhotoUploaded", { type: selected.type, size: selected.size });
   };
 
+  // Both paths keep the answers (and photo) in this browser and continue to
+  // /analiza, where the email is verified and the result is created. No AI
+  // analysis happens here: the photo is analysed only after payment.
   const submit = async () => {
     if (!file || !consent || !terms || !allChecked) return;
     setLoading(true);
     const photoChecks = checkKeys.map((k) => `${t.checks[k].q} ${checks[k] ? t.yes : t.no}`);
     try {
-      // No AI analysis here: it runs only after payment. The short pause keeps the transition calm.
-      const [id] = await Promise.all([createResult({ ...answers, photoChecks }, file), new Promise((r) => window.setTimeout(r, 1500))]);
+      await savePendingAnalysis({ ...answers, photoChecks }, file);
       trackEvent("PhotoSaved");
-      navigate({ to: "/wynik/$id", params: { id } });
+      void navigate({ to: "/analiza" });
     } catch (e) {
       const problem = e instanceof PhotoRejected ? e.problem : "unavailable";
       if (!(e instanceof PhotoRejected)) console.error(e);
@@ -80,7 +75,13 @@ function PhotoPage() {
     }
   };
 
-  if (!user) return <main className="min-h-[70vh]" />;
+  const skipPhoto = async () => {
+    if (!terms) { setError(t.skipNeedsTerms); return; }
+    setError("");
+    await savePendingAnalysis(answers, null);
+    trackEvent("PhotoSkipped");
+    void navigate({ to: "/analiza" });
+  };
 
   if (loading) {
     return (
@@ -183,6 +184,10 @@ function PhotoPage() {
           </div>
           {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
           <Button className="mt-5 h-14 w-full rounded-full text-base" disabled={!file || !consent || !terms || !allChecked} onClick={submit}>{t.submit}<Sparkles size={17} /></Button>
+          <div className="mt-4 text-center">
+            <button type="button" className="text-sm font-medium text-primary underline underline-offset-4 disabled:opacity-50" onClick={skipPhoto}>{t.skip}</button>
+            <p className="mt-1 text-xs text-muted-foreground">{t.skipHint}</p>
+          </div>
         </section>
       </div>
     </main>

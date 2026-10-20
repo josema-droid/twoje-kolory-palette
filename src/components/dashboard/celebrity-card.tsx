@@ -42,7 +42,7 @@ export function CelebrityCard({ celebrity, palette }: { celebrity: Celebrity; pa
   return (
     <figure className="dash-celeb">
       <div className="dash-celeb__img">
-        {photo ? <img src={photo.src} alt={`${celebrity.name} — portret`} loading="lazy" decoding="async" referrerPolicy="no-referrer" /> : <span className="dash-celeb__palette" style={{ background: gradient }} aria-hidden="true" />}
+        {photo ? <img src={photo.src} alt={`${celebrity.name} — portret`} loading="lazy" decoding="async" referrerPolicy="no-referrer" crossOrigin="anonymous" /> : <span className="dash-celeb__palette" style={{ background: gradient }} aria-hidden="true" />}
       </div>
       <figcaption>
         <span className="dash-celeb__name">{celebrity.name}</span>

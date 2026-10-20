@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalizaRouteImport } from './routes/analiza'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as LogowanieRouteImport } from './routes/logowanie'
 import { Route as MojeWynikiRouteImport } from './routes/moje-wyniki'
@@ -33,6 +34,11 @@ import { Route as WynikIdRouteImport } from './routes/wynik.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalizaRoute = AnalizaRouteImport.update({
+  id: '/analiza',
+  path: '/analiza',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
@@ -133,6 +139,7 @@ const WynikIdRoute = WynikIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analiza': typeof AnalizaRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/logowanie': typeof LogowanieRoute
   '/moje-wyniki': typeof MojeWynikiRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analiza': typeof AnalizaRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/logowanie': typeof LogowanieRoute
   '/moje-wyniki': typeof MojeWynikiRoute
@@ -178,6 +186,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analiza': typeof AnalizaRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/logowanie': typeof LogowanieRoute
   '/moje-wyniki': typeof MojeWynikiRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/analiza'
     | '/llms.txt'
     | '/logowanie'
     | '/moje-wyniki'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analiza'
     | '/llms.txt'
     | '/logowanie'
     | '/moje-wyniki'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/analiza'
     | '/llms.txt'
     | '/logowanie'
     | '/moje-wyniki'
@@ -269,6 +281,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalizaRoute: typeof AnalizaRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   LogowanieRoute: typeof LogowanieRoute
   MojeWynikiRoute: typeof MojeWynikiRoute
@@ -297,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analiza': {
+      id: '/analiza'
+      path: '/analiza'
+      fullPath: '/analiza'
+      preLoaderRoute: typeof AnalizaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/llms.txt': {
@@ -437,6 +457,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalizaRoute: AnalizaRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   LogowanieRoute: LogowanieRoute,
   MojeWynikiRoute: MojeWynikiRoute,

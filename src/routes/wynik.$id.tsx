@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { analyzePaidResult, getResult, getTeaser, isAnalysed, PhotoRejected, storedPhoto } from "@/lib/api";
+import { analyzePaidFromAnswers, analyzePaidResult, getResult, getTeaser, isAnalysed, PhotoRejected, storedPhoto } from "@/lib/api";
 import { previewPalette, type Teaser } from "@/content/teaser";
 import { GENDER_MALE } from "@/content/funnel";
 import { createCheckoutSession } from "@/lib/checkout";
@@ -55,10 +55,11 @@ function PaidAnalysis({ resultId, male, onDone }: { resultId: string; male: bool
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<AnalysisState>({ step: "running" });
   const [file, setFile] = useState<File | null>(null);
-  const run = async (photo: string | File) => {
+  const run = async (photo: string | File | null) => {
     setState({ step: "running" });
     try {
-      onDone(await analyzePaidResult(resultId, photo));
+      // null = no photo: the report is built from the quiz answers only.
+      onDone(photo === null ? await analyzePaidFromAnswers(resultId) : await analyzePaidResult(resultId, photo));
       trackEvent("PhotoAnalyzed");
     } catch (e) {
       const problem = e instanceof PhotoRejected ? e.problem : "unavailable";
@@ -103,6 +104,10 @@ function PaidAnalysis({ resultId, male, onDone }: { resultId: string; male: bool
         <Button className="mt-4 h-14 w-full max-w-sm rounded-full text-base" disabled={!file} onClick={() => file && run(file)}>{t.photoAnalyse}<Sparkles size={17} /></Button>
       </div>
       <p className="mt-6 text-xs text-muted-foreground">{male ? pl.photo.tipsMale.join(" · ") : pl.photo.tips.join(" · ")}</p>
+      <div className="mx-auto mt-10 max-w-sm border-t border-border pt-6">
+        <button type="button" className="text-sm font-medium text-primary underline underline-offset-4" onClick={() => void run(null)}>{t.noPhotoReport}</button>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{t.noPhotoReportHint}</p>
+      </div>
     </main>
   );
 }

@@ -15,6 +15,7 @@ import type { Answers } from "@/content/funnel";
 import { trackEvent } from "@/lib/tracking";
 import { seo } from "@/lib/seo";
 import { Checkpoint } from "@/components/funnel/checkpoint";
+import { QuizIntro } from "@/components/funnel/quiz-intro";
 
 export const Route = createFileRoute("/test")({
   head: () => seo({ title: "Test kolorystyczny online — sprawdź swój typ urody", description: "Odpowiedz na kilka pytań o swoją naturalną urodę — to pierwszy krok personalnej analizy kolorystycznej Twój Color.", path: "/test" }),
@@ -30,6 +31,8 @@ function QuizPage() {
   // Checkpoint screen between questions; each one is shown once, even after going back.
   const [checkpoint, setCheckpoint] = useState<{ step: 1 | 2 | 3; next: string | null; answers: Answers } | null>(null);
   const shownCheckpoints = useRef(new Set<number>());
+  // Short educational loading screen before the first question.
+  const [intro, setIntro] = useState(true);
 
   useEffect(() => {
     trackEvent("QuizStart");
@@ -56,6 +59,8 @@ function QuizPage() {
     trackEvent("QuizComplete", { answers: Object.keys(nextAnswers).length });
     navigate({ to: "/zdjecie" });
   };
+
+  if (intro) return <QuizIntro onStart={() => { setIntro(false); window.scrollTo({ top: 0 }); }} />;
 
   if (checkpoint) {
     return (

@@ -1,7 +1,7 @@
 import type { AuthError, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { buildColorReport, type ColorReport, type PhotoAnalysis } from "@/content/engine";
-import { analyzePaidPhoto, type PhotoProblem } from "@/lib/photo-analysis";
+import { analyzePaidPhoto, analyzePaidWithoutPhoto, type PhotoProblem } from "@/lib/photo-analysis";
 import { deletePhoto, loadPhoto, savePhoto } from "@/lib/photo-store";
 import type { Answers } from "@/content/funnel";
 import type { Result } from "@/types/result";
@@ -60,26 +60,64 @@ async function photoToBase64Jpeg(file: File): Promise<string> {
   return dataUrl.slice(dataUrl.indexOf(",") + 1);
 }
 
-/**
- * Before payment: saves the quiz answers as a new (unpaid, not yet analysed)
- * result and keeps the downscaled photo in this browser. No AI call happens
- * here — the photo is analysed only after payment (analyzePaidResult).
- */
-export async function createResult(answers: Answers, photoFile: File): Promise<string> {
-  let image: string;
-  try {
-    image = await photoToBase64Jpeg(photoFile);
-  } catch {
-    throw new PhotoRejected("unreadable");
+// The finished quiz (and optional photo) waits here until the visitor verifies
+// their email on /analiza; only then is the result created, owned by the account.
+// localStorage, so it survives closing the tab while fetching the code.
+const PENDING_KEY = "twoje-kolory-pending";
+type Pending = { answers: Answers; photo: string | null };
+
+/** End of the funnel: keeps the answers and the downscaled photo (if any) in this browser. */
+export async function savePendingAnalysis(answers: Answers, photoFile: File | null): Promise<void> {
+  let photo: string | null = null;
+  if (photoFile) {
+    try {
+      photo = await photoToBase64Jpeg(photoFile);
+    } catch {
+      throw new PhotoRejected("unreadable");
+    }
   }
+  try {
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ answers, photo } satisfies Pending));
+  } catch {
+    // Storage full (large photo) or blocked: keep the answers; the photo can be added after paying.
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ answers, photo: null } satisfies Pending));
+  }
+}
+
+export function hasPendingAnalysis(): boolean {
+  try {
+    return localStorage.getItem(PENDING_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * After email verification: creates the (unpaid, not yet analysed) result for
+ * the logged-in user and moves the photo next to it. No AI call happens here —
+ * the photo is analysed only after payment (analyzePaidResult).
+ */
+export async function createResultFromPending(): Promise<string> {
+  const pending = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "null") as Pending | null;
+  if (!pending) throw new Error("No pending analysis");
   // The id is generated here so the row needn't be read back after insert; the
   // result is then fetched via getResult. Only id and answers may be sent
   // (migration 0010); user_id defaults to the logged-in user, is_paid to false.
   const id = crypto.randomUUID();
-  const { error } = await supabase.from("results").insert({ id, answers });
+  const { error } = await supabase.from("results").insert({ id, answers: pending.answers });
   if (error) throw error;
-  savePhoto(id, image);
+  if (pending.photo) savePhoto(id, pending.photo);
+  localStorage.removeItem(PENDING_KEY);
   return id;
+}
+
+/** After payment, without a photo: the report is built from the quiz answers only. */
+export async function analyzePaidFromAnswers(resultId: string): Promise<Result> {
+  const response = await analyzePaidWithoutPhoto({ data: { resultId } });
+  if (!response.ok) throw new PhotoRejected(response.problem);
+  const result = await getResult(resultId);
+  if (!result) throw new Error("Failed to load analysed result");
+  return result;
 }
 
 /** True once the paid analysis has produced the full report. */
@@ -223,19 +261,21 @@ export async function signUp(email: string, password: string): Promise<SignUpOut
 
 // Both flows email a 6-digit code: "signup" confirms a new address,
 // "recovery" proves ownership before choosing a new password.
-export type CodePurpose = "signup" | "recovery";
+// "login" = passwordless sign-in with an emailed code; it also creates the
+// account on first use (the "your analysis is ready" step and the login page).
+export type CodePurpose = "signup" | "recovery" | "login";
 
 export async function verifyEmailCode(email: string, code: string, purpose: CodePurpose): Promise<AuthUser> {
-  const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: purpose });
+  const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: purpose === "login" ? "email" : purpose });
   if (error) throw toAuthFailure(error);
   if (!data.user) throw new AuthFailure("unknown");
   return toAuthUser(data.user);
 }
 
 export async function sendEmailCode(email: string, purpose: CodePurpose): Promise<void> {
-  const { error } = purpose === "signup"
-    ? await supabase.auth.resend({ type: "signup", email })
-    : await supabase.auth.resetPasswordForEmail(email);
+  const { error } = purpose === "signup" ? await supabase.auth.resend({ type: "signup", email })
+    : purpose === "recovery" ? await supabase.auth.resetPasswordForEmail(email)
+    : await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
   if (error) throw toAuthFailure(error);
 }
 

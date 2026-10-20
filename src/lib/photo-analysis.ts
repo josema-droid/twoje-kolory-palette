@@ -130,6 +130,35 @@ export const analyzePaidPhoto = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * After payment, for buyers who don't want to share a photo: builds the full
+ * report from the quiz answers alone (no photo, no Gemini call, no cost).
+ */
+export const analyzePaidWithoutPhoto = createServerFn({ method: "POST" })
+  .validator((data: { resultId: string }) => {
+    if (typeof data?.resultId !== "string" || !UUID.test(data.resultId)) throw new Error("Invalid result id");
+    return { resultId: data.resultId };
+  })
+  .handler(async ({ data }): Promise<PhotoAnalysisResponse> => {
+    const url = process.env["SUPABASE_URL"];
+    const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+    if (!url || !serviceKey) return { ok: false, problem: "unavailable" };
+    const { createClient } = await import("@supabase/supabase-js");
+    const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
+    const { data: row, error } = await admin.from("results").select("is_paid, stripe_session_id, answers, report").eq("id", data.resultId).maybeSingle<{ is_paid: boolean; stripe_session_id: string | null; answers: Answers; report: { palette?: unknown } }>();
+    if (error || !row) return { ok: false, problem: "unavailable" };
+    if (Array.isArray(row.report?.palette)) return { ok: true };
+    if (!row.is_paid || !row.stripe_session_id) return { ok: false, problem: "not_paid" };
+    const { estimateFromAnswers } = await import("@/content/teaser");
+    const report = buildColorReport(estimateFromAnswers(row.answers), row.answers);
+    const { error: saveError } = await admin.from("results").update({ report }).eq("id", data.resultId);
+    if (saveError) {
+      console.error("Could not save answers-only report", data.resultId, saveError);
+      return { ok: false, problem: "unavailable" };
+    }
+    return { ok: true };
+  });
+
 /** The visitor's IP as set by the hosting platform (not the spoofable leftmost X-Forwarded-For). */
 async function clientIp(): Promise<string | undefined> {
   const { getRequestHeader, getRequestIP } = await import("@tanstack/react-start/server");
