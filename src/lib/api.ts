@@ -19,10 +19,31 @@ type ResultRow = {
   created_at: string;
 };
 
+const TEMPERATURES = ["chłodna", "neutralno-chłodna", "neutralna", "neutralno-ciepła", "ciepła"] as const;
+const DEPTHS = ["jasna", "średnia", "głęboka"] as const;
+const SATURATIONS = ["miękka", "umiarkowana", "czysta"] as const;
+const CONTRASTS = ["niski", "średni", "wysoki"] as const;
+const oneOf = <T extends string>(list: readonly T[], v: string | undefined): v is T => list.includes(v as T);
+
+/**
+ * Reports made before photo_analysis was saved (before Oct 2026) still carry the
+ * four values in their profile sentence (engine.ts buildColorReport): read them
+ * back so the report can be rebuilt as a dashboard from the same inputs.
+ */
+function analysisFromProfile(profile: unknown): PhotoAnalysis | null {
+  if (typeof profile !== "string") return null;
+  const m = /jest ([^;]+); głębia: ([^;]+); nasycenie: ([^;]+); naturalny kontrast: ([^.]+)\./.exec(profile);
+  const [, t, d, s, c] = m ?? [];
+  return oneOf(TEMPERATURES, t) && oneOf(DEPTHS, d) && oneOf(SATURATIONS, s) && oneOf(CONTRASTS, c) ? { temperature: t, depth: d, saturation: s, contrast: c } : null;
+}
+
 function fromRow({ id, is_paid, user_id, answers, report, photo_analysis }: ResultRow): Result {
-  // Reports saved before the dashboard existed lack it; rebuild from the saved
-  // photo analysis when we have it.
-  if (!report.dashboard && photo_analysis) report = buildColorReport(photo_analysis, answers);
+  // Reports saved before the dashboard existed lack it; rebuild them from the saved
+  // photo analysis, or for the oldest ones from the values in their profile sentence.
+  if (!report.dashboard && Array.isArray(report.palette)) {
+    const analysis = photo_analysis ?? analysisFromProfile(report.profile);
+    if (analysis) report = buildColorReport(analysis, answers);
+  }
   return { id, answers, report, isPaid: is_paid, userId: user_id ?? null };
 }
 
@@ -191,6 +212,17 @@ export async function listMyResults(): Promise<ResultSummary[]> {
     .returns<Pick<ResultRow, "id" | "is_paid" | "created_at">[]>();
   if (error) throw error;
   return data.map((row) => ({ id: row.id, isPaid: row.is_paid, createdAt: row.created_at }));
+}
+
+/**
+ * Attaches results bought before login was required (anonymous rows) to this
+ * account — only those paid with this account's verified email (migration 0011).
+ * Safe to call repeatedly; failures are ignored (the list still loads).
+ */
+export async function claimMyPaidResults(): Promise<void> {
+  const { error } = await supabase.rpc("claim_my_paid_results");
+  // PGRST202 = function missing until migration 0011 is applied.
+  if (error && error.code !== "PGRST202") console.error("Could not attach earlier paid results", error.message);
 }
 
 // --- Auth -----------------------------------------------------------------

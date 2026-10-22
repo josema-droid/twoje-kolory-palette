@@ -4,7 +4,7 @@ import { ArrowRight, LockKeyhole, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { listMyResults, type ResultSummary } from "@/lib/api";
+import { claimMyPaidResults, listMyResults, type ResultSummary } from "@/lib/api";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/moje-wyniki")({
@@ -22,8 +22,14 @@ function MyResultsPage() {
     if (user === null) { void navigate({ to: "/logowanie", search: { redirect: "/moje-wyniki" }, replace: true }); return; }
     if (!user) return;
     let active = true;
-    // Claim first so a result made just before logging in is already listed.
-    listMyResults().then((value) => { if (active) setResults(value); }, () => { if (active) setFailed(true); });
+    // Attach results paid before login was required, then list everything.
+    claimMyPaidResults().then(listMyResults).then((value) => {
+      if (!active) return;
+      // One paid result: go straight to the full report instead of a one-item list.
+      const paid = value.filter((r) => r.isPaid);
+      if (value.length === 1 && paid.length === 1) { void navigate({ to: "/wynik/$id", params: { id: paid[0]!.id }, replace: true }); return; }
+      setResults(value);
+    }, () => { if (active) setFailed(true); });
     return () => { active = false; };
   }, [user, navigate]);
 
