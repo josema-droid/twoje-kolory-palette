@@ -153,7 +153,25 @@ function ResultPage() {
     window.location.href = url;
   };
   if (loading) return <main className="flex min-h-[65vh] items-center justify-center font-display text-3xl">{pl.result.loading}</main>;
-  if (!result) return <main className="mx-auto min-h-[65vh] max-w-4xl px-5 py-20"><h1 className="font-display text-4xl">{pl.result.missing}</h1><Button asChild className="mt-8 rounded-full"><Link to="/">{pl.backHome}</Link></Button></main>;
+  // Results are private to their owner (migration 0012): a logged-out visitor is
+  // asked to log in; another account sees that this result isn't theirs.
+  if (!result) {
+    if (user === undefined) return <main className="flex min-h-[65vh] items-center justify-center font-display text-3xl">{pl.result.loading}</main>;
+    return (
+      <main className="mx-auto min-h-[65vh] max-w-xl px-5 py-20 text-center">
+        <h1 className="font-display text-4xl">{user ? pl.result.notYours : pl.result.loginToSee}</h1>
+        <p className="mt-4 leading-7 text-muted-foreground">{user ? pl.result.notYoursText : pl.result.loginToSeeText}</p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          {user ? (
+            <Button asChild className="h-12 rounded-full px-7"><Link to="/moje-wyniki">{pl.result.savedLink}<ArrowRight size={16} /></Link></Button>
+          ) : (
+            <Button asChild className="h-12 rounded-full px-7"><Link to="/logowanie" search={{ redirect: `/wynik/${id}` }}>{pl.auth.navLogin}<ArrowRight size={16} /></Link></Button>
+          )}
+          <Button asChild variant="outline" className="h-12 rounded-full border-primary/30 px-7 text-primary"><Link to="/">{pl.backHome}</Link></Button>
+        </div>
+      </main>
+    );
+  }
   const t = pl.result;
   const { report } = result;
   const male = result.answers["gender"] === GENDER_MALE || report.gender === "male";
