@@ -6,6 +6,9 @@ import { pl } from "@/content/pl";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { trackEvent } from "@/lib/tracking";
 import { disableAnalytics, enableAnalytics } from "@/lib/analytics";
+import { disablePixel, enablePixel, pixelPageView } from "@/lib/meta-pixel";
+import { legacyAnalyticsConsent, readConsent, saveConsent, type Consent } from "@/lib/consent";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ShareButton } from "@/components/share-button";
 import logoMark from "@/assets/landing/twoj-color-logo.png";
 
@@ -15,27 +18,40 @@ const AUTH_PATHS = ["/logowanie", "/rejestracja", "/weryfikacja", "/nie-pamietam
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [cookieChoice, setCookieChoice] = useState<string | null>(null);
+  // null = not chosen yet → banner. Analytics = Google Analytics, marketing = Meta Pixel.
+  const [consent, setConsent] = useState<Consent | null>(null);
+  const [consentLoaded, setConsentLoaded] = useState(false);
   const user = useAuthUser();
   const onAuthPage = AUTH_PATHS.includes(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     trackEvent("PageView", { path: pathname });
+    pixelPageView(); // no-op until marketing consent; the first PageView is sent on load
     setMenuOpen(false); // close the mobile menu after navigating
   }, [pathname]);
   useEffect(() => {
-    const saved = localStorage.getItem("twoje-kolory-cookies");
-    setCookieChoice(saved);
-    if (saved === "all") enableAnalytics();
+    const saved = readConsent();
+    setConsent(saved);
+    setConsentLoaded(true);
+    if (saved?.analytics || (!saved && legacyAnalyticsConsent())) enableAnalytics();
+    if (saved?.marketing) enablePixel();
   }, []);
   const [bannerOpen, setBannerOpen] = useState(false);
-  const choose = (value: string) => {
-    localStorage.setItem("twoje-kolory-cookies", value);
-    setCookieChoice(value);
+  const [customizing, setCustomizing] = useState(false);
+  const [draft, setDraft] = useState<Consent>({ analytics: false, marketing: false });
+  // Each tool runs only with its own consent; withdrawing stops it and clears its cookies.
+  const choose = (value: Consent) => {
+    saveConsent(value);
+    setConsent(value);
     setBannerOpen(false);
-    // Google Analytics runs only with consent ("Akceptuj wszystkie").
-    if (value === "all") enableAnalytics();
-    else disableAnalytics();
+    setCustomizing(false);
+    if (value.analytics) enableAnalytics(); else disableAnalytics();
+    if (value.marketing) enablePixel(); else disablePixel();
+  };
+  const openSettings = () => {
+    setDraft(consent ?? { analytics: false, marketing: false });
+    setCustomizing(true);
+    setBannerOpen(true);
   };
 
   return <div className="min-h-screen bg-background text-foreground">
@@ -83,7 +99,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
             <Link to="/polityka-prywatnosci" className="hover:text-primary">{pl.legal.privacy.label}</Link>
             <Link to="/polityka-cookies" className="hover:text-primary">{pl.legal.cookies.label}</Link>
             <Link to="/odstapienie-umowy" className="hover:text-primary">{pl.legal.withdrawal.label}</Link>
-            <button type="button" onClick={() => setBannerOpen(true)} className="text-left hover:text-primary">{pl.cookies.settings}</button>
+            <button type="button" onClick={openSettings} className="text-left hover:text-primary">{pl.cookies.settings}</button>
           </nav>
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground">{pl.footer.contactLabel}</p>
@@ -97,8 +113,26 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     </footer>
-    {(cookieChoice === null || bannerOpen) && <aside className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-lg border border-border bg-card p-5 shadow-xl md:bottom-6 md:p-6" role="dialog" aria-label={pl.cookies.title}>
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6"><div className="flex-1"><p className="font-display text-lg font-semibold">{pl.cookies.title}</p><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{pl.cookies.text}{" "}<Link to="/polityka-cookies" className="font-medium text-primary underline underline-offset-2">{pl.cookies.policyLink}</Link></p></div><div className="flex shrink-0 gap-2">{/* Equal size and weight: refusing must be as easy as accepting (GDPR / UODO). */}<Button className="h-11 flex-1 rounded-full px-4 text-xs md:w-44 md:flex-none" onClick={() => choose("necessary")}>{pl.cookies.necessary}</Button><Button className="h-11 flex-1 rounded-full px-4 text-xs md:w-44 md:flex-none" onClick={() => choose("all")}>{pl.cookies.accept}</Button></div></div>
+    {consentLoaded && (consent === null || bannerOpen) && <aside className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-lg border border-border bg-card p-5 shadow-xl md:bottom-6 md:p-6" role="dialog" aria-label={pl.cookies.title}>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
+        <div className="flex-1">
+          <p className="font-display text-lg font-semibold">{pl.cookies.title}</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{pl.cookies.text}{" "}<Link to="/polityka-cookies" className="font-medium text-primary underline underline-offset-2">{pl.cookies.policyLink}</Link></p>
+          {!customizing && <button type="button" className="mt-2 text-sm font-medium text-primary underline underline-offset-2" onClick={openSettings}>{pl.cookies.customize}</button>}
+        </div>
+        {!customizing && <div className="flex shrink-0 gap-2">{/* Equal size and weight: refusing must be as easy as accepting (GDPR / UODO). */}<Button className="h-11 flex-1 rounded-full px-4 text-xs md:w-44 md:flex-none" onClick={() => choose({ analytics: false, marketing: false })}>{pl.cookies.necessary}</Button><Button className="h-11 flex-1 rounded-full px-4 text-xs md:w-44 md:flex-none" onClick={() => choose({ analytics: true, marketing: true })}>{pl.cookies.accept}</Button></div>}
+      </div>
+      {customizing && (
+        <div className="mt-4 space-y-3 border-t border-border pt-4">
+          <label className="flex items-start gap-3 text-sm"><Checkbox checked disabled className="mt-0.5" /><span><span className="font-medium">{pl.cookies.necessaryTitle}</span><span className="block text-xs text-muted-foreground">{pl.cookies.necessaryText}</span></span></label>
+          <label className="flex cursor-pointer items-start gap-3 text-sm"><Checkbox checked={draft.analytics} onCheckedChange={(v) => setDraft((d) => ({ ...d, analytics: v === true }))} className="mt-0.5" /><span><span className="font-medium">{pl.cookies.analyticsTitle}</span><span className="block text-xs text-muted-foreground">{pl.cookies.analyticsText}</span></span></label>
+          <label className="flex cursor-pointer items-start gap-3 text-sm"><Checkbox checked={draft.marketing} onCheckedChange={(v) => setDraft((d) => ({ ...d, marketing: v === true }))} className="mt-0.5" /><span><span className="font-medium">{pl.cookies.marketingTitle}</span><span className="block text-xs text-muted-foreground">{pl.cookies.marketingText}</span></span></label>
+          <div className="flex flex-col gap-2 pt-1 sm:flex-row">
+            <Button className="h-11 flex-1 rounded-full px-4 text-xs" onClick={() => choose(draft)}>{pl.cookies.save}</Button>
+            <Button className="h-11 flex-1 rounded-full px-4 text-xs" onClick={() => choose({ analytics: true, marketing: true })}>{pl.cookies.accept}</Button>
+          </div>
+        </div>
+      )}
     </aside>}
   </div>;
 }

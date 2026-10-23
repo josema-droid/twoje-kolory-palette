@@ -16,6 +16,7 @@ import { trackEvent } from "@/lib/tracking";
 import { seo } from "@/lib/seo";
 import { Checkpoint } from "@/components/funnel/checkpoint";
 import { QuizIntro } from "@/components/funnel/quiz-intro";
+import { pixelEvent } from "@/lib/meta-pixel";
 
 export const Route = createFileRoute("/test")({
   head: () => seo({ title: "Test kolorystyczny online — sprawdź swój typ urody", description: "Odpowiedz na kilka pytań o swoją naturalną urodę — to pierwszy krok personalnej analizy kolorystycznej Twój Color.", path: "/test" }),
@@ -60,7 +61,7 @@ function QuizPage() {
     navigate({ to: "/zdjecie" });
   };
 
-  if (intro) return <QuizIntro onStart={() => { setIntro(false); window.scrollTo({ top: 0 }); }} />;
+  if (intro) return <QuizIntro onStart={() => { pixelEvent("Lead"); setIntro(false); window.scrollTo({ top: 0 }); }} />;
 
   if (checkpoint) {
     return (

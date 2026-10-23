@@ -15,6 +15,8 @@ import type { Result } from "@/types/result";
 import { seo } from "@/lib/seo";
 import { ResultDashboard } from "@/components/dashboard/result-dashboard";
 import { PdfButton } from "@/components/pdf-button";
+import { pixelEventOnce } from "@/lib/meta-pixel";
+import { CURRENCY, PRICE_PLN } from "@/lib/price";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -121,6 +123,14 @@ function ResultPage() {
   const [busy, setBusy] = useState(false);
   const user = useAuthUser();
   const [teaser, setTeaser] = useState<Teaser | null>(null);
+  // Meta Pixel (only with marketing consent): the price/payment box is shown →
+  // InitiateCheckout; back from Stripe with the result paid → Purchase. Once per result.
+  useEffect(() => {
+    if (!result) return;
+    const value = { value: PRICE_PLN, currency: CURRENCY };
+    if (!result.isPaid) pixelEventOnce(`checkout:${result.id}`, "InitiateCheckout", value);
+    else if (new URLSearchParams(window.location.search).get("paid") === "1") pixelEventOnce(`purchase:${result.id}`, "Purchase", value, `purchase-${result.id}`);
+  }, [result]);
   useEffect(() => {
     if (!result || result.isPaid) return;
     let active = true;

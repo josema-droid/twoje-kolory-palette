@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { SITE_URL } from "@/lib/seo";
+import { PRICE_GROSZE } from "@/lib/price";
 
 type CheckoutInput = { resultId: string; origin: string; acceptedTerms: boolean; waivedWithdrawal: boolean };
 
@@ -33,7 +34,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         {
           price_data: {
             currency: "pln",
-            unit_amount: 3900,
+            unit_amount: PRICE_GROSZE,
             product_data: { name: "Pełny wynik — Twój Color" },
           },
           quantity: 1,

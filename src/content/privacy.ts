@@ -4,7 +4,7 @@ type Block = string | { list: string[] };
 export type PrivacySection = { id: string; title: string; body: Block[] };
 
 export const privacyPolicy = {
-  updated: "15 października 2026 r.",
+  updated: "23 października 2026 r.",
   intro:
     "Szanujemy Twoją prywatność. Poniżej wyjaśniamy prostym językiem, jakie dane zbieramy, po co, jak długo je przechowujemy, komu je powierzamy i jakie masz prawa. Szczególnie dokładnie opisujemy, co dzieje się ze zdjęciem, które dodajesz do analizy.",
   sections: [
@@ -28,6 +28,7 @@ export const privacyPolicy = {
             "Adres e-mail i hasło (tylko jeśli zakładasz konto) — aby prowadzić Twoje konto i zapisywać wyniki. Hasło przechowujemy wyłącznie w postaci zaszyfrowanej (hash). Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b RODO).",
             "Dane dotyczące płatności — aby przyjąć zapłatę i wystawić dokumenty księgowe. Danych karty ani danych logowania do banku nie widzimy — obsługuje je operator płatności Stripe. Podstawa: wykonanie umowy oraz obowiązki prawne, m.in. podatkowe (art. 6 ust. 1 lit. b i c RODO).",
             "Dane analityczne (sposób korzystania ze strony) — tylko jeśli wyrazisz zgodę w banerze cookies, aby ulepszać stronę. Podstawa: Twoja zgoda (art. 6 ust. 1 lit. a RODO).",
+            "Dane marketingowe (Meta Pixel: odwiedzone strony, rozpoczęcie testu, wyświetlenie oferty, zakup i jego kwota) — tylko jeśli wyrazisz zgodę na pliki marketingowe, aby mierzyć skuteczność naszych reklam na Facebooku i Instagramie. Nie przekazujemy Meta odpowiedzi z testu, zdjęcia ani wyniku. Podstawa: Twoja zgoda (art. 6 ust. 1 lit. a RODO).",
             "Skrót (hash) adresu IP — przez maksymalnie 2 dni, aby chronić usługę przed nadużyciami (np. automatycznym wysyłaniem wielu zdjęć). Podstawa: nasz prawnie uzasadniony interes, czyli bezpieczeństwo usługi (art. 6 ust. 1 lit. f RODO).",
             "Korespondencja z nami — aby odpowiedzieć na Twoje pytania. Podstawa: nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO).",
           ],
@@ -61,6 +62,7 @@ export const privacyPolicy = {
         {
           list: [
             "Google (Google Cloud / Gemini API) — analiza zdjęcia; Google Analytics — statystyki strony (tylko za Twoją zgodą).",
+            "Meta Platforms Ireland Limited — Meta Pixel, pomiar skuteczności reklam (tylko za Twoją zgodą na pliki marketingowe; w tym zakresie Meta i my jesteśmy współadministratorami).",
             "Vercel Inc. — hosting strony i serwerów aplikacji.",
             "Supabase Inc. — baza danych z wynikami analiz oraz obsługa kont.",
             "Resend — wysyłka wiadomości e-mail (kodów weryfikacyjnych i potwierdzeń zamówień).",
@@ -75,7 +77,7 @@ export const privacyPolicy = {
       id: "poza-eog",
       title: "5. Przekazywanie danych poza Europejski Obszar Gospodarczy",
       body: [
-        "Niektórzy z naszych dostawców (w tym Google) mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym, np. w Stanach Zjednoczonych. W takich przypadkach dane są chronione odpowiednimi zabezpieczeniami: decyzją Komisji Europejskiej stwierdzającą odpowiedni stopień ochrony (EU–US Data Privacy Framework) lub standardowymi klauzulami umownymi zatwierdzonymi przez Komisję Europejską.",
+        "Niektórzy z naszych dostawców (w tym Google i Meta) mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym, np. w Stanach Zjednoczonych. W takich przypadkach dane są chronione odpowiednimi zabezpieczeniami: decyzją Komisji Europejskiej stwierdzającą odpowiedni stopień ochrony (EU–US Data Privacy Framework) lub standardowymi klauzulami umownymi zatwierdzonymi przez Komisję Europejską.",
         "W przypadku Google przetwarzanie odbywa się zgodnie z umową powierzenia przetwarzania danych Google Cloud (Cloud Data Processing Addendum), która zawiera te zabezpieczenia. Kopię zabezpieczeń możesz uzyskać, pisząc do nas.",
       ],
     },
@@ -121,7 +123,7 @@ export const privacyPolicy = {
       title: "8. Pliki cookies i pamięć przeglądarki",
       body: [
         "Używamy niezbędnych mechanizmów przeglądarki: zapamiętania Twojego wyboru w banerze cookies, tymczasowego przechowania odpowiedzi z testu do czasu dodania zdjęcia oraz utrzymania sesji logowania.",
-        "Pliki cookies Google Analytics zapisujemy wyłącznie po kliknięciu „Akceptuj wszystkie”. Zgodę możesz zmienić w każdej chwili w stopce strony („Ustawienia cookies”). Szczegóły znajdziesz w Polityce cookies.",
+        "Pliki cookies Google Analytics zapisujemy wyłącznie za zgodą na pliki analityczne, a Meta Pixel uruchamiamy wyłącznie za zgodą na pliki marketingowe (obie zgody daje przycisk „Akceptuj wszystkie”; każdą można wybrać osobno w „Dostosuj”). Zgodę możesz zmienić w każdej chwili w stopce strony („Ustawienia cookies”). Szczegóły znajdziesz w Polityce cookies.",
       ],
     },
     {
