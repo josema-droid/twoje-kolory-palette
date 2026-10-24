@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { pl } from "@/content/pl";
+import { trackEvent } from "@/lib/tracking";
 
 /** Downloads the report inside #targetId as a PDF (blocks marked with data-pdf-block). */
 export function PdfButton({ targetId, className = "" }: { targetId: string; className?: string }) {
@@ -20,6 +21,7 @@ export function PdfButton({ targetId, className = "" }: { targetId: string; clas
     setBusy(true);
     try {
       await downloadPdf(root, "twoj-color-raport.pdf");
+      trackEvent("PdfDownloaded");
     } catch (error) {
       console.error("PDF export failed", error);
       setMessage(t.pdfFailed);

@@ -11,6 +11,8 @@ declare global {
   }
 }
 
+export type PixelEventName = "Lead" | "CompleteRegistration" | "InitiateCheckout" | "Purchase";
+
 const PIXEL_ID = import.meta.env["VITE_META_PIXEL_ID"] as string | undefined;
 let loaded = false;
 
@@ -63,20 +65,35 @@ export function pixelPageView(): void {
  * A standard event, e.g. Lead, InitiateCheckout, Purchase. `eventId` lets Meta
  * de-duplicate if the same event is ever also sent server-side (Conversions API).
  */
-export function pixelEvent(name: "Lead" | "InitiateCheckout" | "Purchase", params?: Record<string, unknown>, eventId?: string): void {
+export function pixelEvent(name: PixelEventName, params?: Record<string, unknown>, eventId?: string): void {
   if (!loaded) return;
   window.fbq?.("track", name, params ?? {}, eventId ? { eventID: eventId } : undefined);
 }
 
-/** Fires an event at most once per key in this browser (e.g. Purchase per result). */
-export function pixelEventOnce(key: string, name: "Lead" | "InitiateCheckout" | "Purchase", params?: Record<string, unknown>, eventId?: string): void {
+/** A custom funnel-step event (fbq trackCustom), e.g. QuizComplete. */
+export function pixelCustom(name: string, params?: Record<string, unknown>): void {
   if (!loaded) return;
+  window.fbq?.("trackCustom", name, params ?? {});
+}
+
+/** Fires an event at most once per key in this browser (e.g. Purchase per order). */
+export function pixelEventOnce(key: string, name: PixelEventName, params?: Record<string, unknown>, eventId?: string): void {
+  // Purchase logs to the console so it can be checked while testing.
+  const log = name === "Purchase" ? (msg: string) => console.info(`[Meta Pixel] Purchase ${msg}`, params ?? {}, eventId ? { eventID: eventId } : {}) : () => {};
+  if (!loaded) {
+    log("not sent: no marketing consent (or VITE_META_PIXEL_ID missing)");
+    return;
+  }
+  const storageKey = `twoje-kolory-px:${key}`;
   try {
-    const storageKey = `twoje-kolory-px:${key}`;
-    if (localStorage.getItem(storageKey)) return;
+    if (localStorage.getItem(storageKey)) {
+      log("not sent: already sent for this order");
+      return;
+    }
     localStorage.setItem(storageKey, "1");
   } catch {
     // Storage blocked: may fire again on reload, which Meta de-duplicates by eventID.
   }
   pixelEvent(name, params, eventId);
+  log("sent");
 }

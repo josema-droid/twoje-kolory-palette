@@ -10,6 +10,7 @@ import { useAuthUser } from "@/hooks/use-auth-user";
 import { DrapeLoader } from "@/components/funnel/drape-loader";
 import { pl } from "@/content/pl";
 import { trackEvent } from "@/lib/tracking";
+import { trackSignUp } from "@/lib/conversions";
 import { seo } from "@/lib/seo";
 
 // End of the funnel: "we're working on your analysis" → "it's ready, verify your
@@ -66,7 +67,7 @@ function AnalysisPage() {
   useEffect(() => {
     if (phase !== "working" || !workDone || user === undefined) return;
     if (user) void finish();
-    else setPhase("email");
+    else { setPhase("email"); trackEvent("AnalysisReadyShown"); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, workDone, user]);
 
@@ -98,7 +99,8 @@ function AnalysisPage() {
     setBusy(true); setError("");
     try {
       const { verifyEmailCode } = await import("@/lib/api");
-      await verifyEmailCode(email, value, "login");
+      const account = await verifyEmailCode(email, value, "login");
+      if (account.isNew) trackSignUp(account.id);
       await finish();
     } catch (err) {
       setError(authErrorMessage(err)); setCode("");

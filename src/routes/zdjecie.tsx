@@ -52,7 +52,7 @@ function PhotoPage() {
     if (!selected.type.startsWith("image/")) { setError(t.invalidFile); return; }
     if (preview) URL.revokeObjectURL(preview);
     setFile(selected); setPreview(URL.createObjectURL(selected)); setError(""); setChecks({});
-    trackEvent("PhotoUploaded", { type: selected.type, size: selected.size });
+    trackEvent("PhotoUploaded");
   };
 
   // Both paths keep the answers (and photo) in this browser and continue to

@@ -16,7 +16,7 @@ import { trackEvent } from "@/lib/tracking";
 import { seo } from "@/lib/seo";
 import { Checkpoint } from "@/components/funnel/checkpoint";
 import { QuizIntro } from "@/components/funnel/quiz-intro";
-import { pixelEvent } from "@/lib/meta-pixel";
+import { trackTestStart } from "@/lib/conversions";
 
 export const Route = createFileRoute("/test")({
   head: () => seo({ title: "Test kolorystyczny online — sprawdź swój typ urody", description: "Odpowiedz na kilka pytań o swoją naturalną urodę — to pierwszy krok personalnej analizy kolorystycznej Twój Color.", path: "/test" }),
@@ -36,7 +36,8 @@ function QuizPage() {
   const [intro, setIntro] = useState(true);
 
   useEffect(() => {
-    trackEvent("QuizStart");
+    // After this render's effects, so Pixel / GA (enabled by SiteChrome) are already loaded.
+    window.setTimeout(() => trackEvent("QuizStart"), 0);
     sessionStorage.removeItem("twoje-kolory-answers");
   }, []);
 
@@ -61,7 +62,7 @@ function QuizPage() {
     navigate({ to: "/zdjecie" });
   };
 
-  if (intro) return <QuizIntro onStart={() => { pixelEvent("Lead"); setIntro(false); window.scrollTo({ top: 0 }); }} />;
+  if (intro) return <QuizIntro onStart={() => { trackTestStart(); setIntro(false); window.scrollTo({ top: 0 }); }} />;
 
   if (checkpoint) {
     return (
@@ -90,7 +91,7 @@ function QuizPage() {
     const step = !next ? 3 : next === "naturalHair" ? 1 : (next === "jewelry" || next === "white") && shownCheckpoints.current.has(1) ? 2 : null;
     if (step && !shownCheckpoints.current.has(step)) {
       shownCheckpoints.current.add(step);
-      trackEvent("QuizCheckpoint", { step });
+      trackEvent(`QuizCheckpoint${step}`);
       setCheckpoint({ step, next, answers: nextAnswers });
       window.scrollTo({ top: 0 });
       return;

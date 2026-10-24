@@ -58,5 +58,19 @@ export function disableAnalytics(): void {
 
 /** Custom events (only sent once analytics is enabled). */
 export function gaEvent(name: string, params?: Record<string, unknown>): void {
+  if (!loaded) return; // only once analytics consent has loaded GA
   window.gtag?.("event", name, params);
+}
+
+/** Sends a GA4 event at most once per key in this browser (only once analytics is enabled). */
+export function gaEventOnce(key: string, name: string, params?: Record<string, unknown>): void {
+  if (!loaded || typeof window.gtag !== "function") return;
+  try {
+    const storageKey = `twoje-kolory-ga:${key}`;
+    if (localStorage.getItem(storageKey)) return;
+    localStorage.setItem(storageKey, "1");
+  } catch {
+    // Storage blocked: may repeat on reload; GA de-duplicates purchases by transaction_id.
+  }
+  gaEvent(name, params);
 }

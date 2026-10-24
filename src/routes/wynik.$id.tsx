@@ -15,8 +15,7 @@ import type { Result } from "@/types/result";
 import { seo } from "@/lib/seo";
 import { ResultDashboard } from "@/components/dashboard/result-dashboard";
 import { PdfButton } from "@/components/pdf-button";
-import { pixelEventOnce } from "@/lib/meta-pixel";
-import { CURRENCY, PRICE_PLN } from "@/lib/price";
+import { trackCheckoutView, trackPurchase } from "@/lib/conversions";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -49,6 +48,19 @@ function Pills({ items }: { items: string[] }) {
   );
 }
 
+// Stripe order id saved when checkout starts, so Purchase can be sent once the
+// order turns paid even if the buyer comes back later without the return URL.
+const pendingKey = (resultId: string) => `twoje-kolory-order:${resultId}`;
+function savePendingOrder(resultId: string, orderId: string) {
+  try { localStorage.setItem(pendingKey(resultId), orderId); } catch { /* storage blocked */ }
+}
+function readPendingOrder(resultId: string): string | null {
+  try { return localStorage.getItem(pendingKey(resultId)); } catch { return null; }
+}
+function clearPendingOrder(resultId: string) {
+  try { localStorage.removeItem(pendingKey(resultId)); } catch { /* storage blocked */ }
+}
+
 type AnalysisState = { step: "running" } | { step: "needPhoto"; problem?: string };
 
 /** After payment: analyse the photo kept in this browser, or ask for one (missing or unusable). */
@@ -62,7 +74,7 @@ function PaidAnalysis({ resultId, male, onDone }: { resultId: string; male: bool
     try {
       // null = no photo: the report is built from the quiz answers only.
       onDone(photo === null ? await analyzePaidFromAnswers(resultId) : await analyzePaidResult(resultId, photo));
-      trackEvent("PhotoAnalyzed");
+      trackEvent(photo === null ? "ReportFromAnswers" : "PhotoAnalyzed");
     } catch (e) {
       const problem = e instanceof PhotoRejected ? e.problem : "unavailable";
       if (!(e instanceof PhotoRejected)) console.error(e);
@@ -123,19 +135,20 @@ function ResultPage() {
   const [busy, setBusy] = useState(false);
   const user = useAuthUser();
   const [teaser, setTeaser] = useState<Teaser | null>(null);
+  // Back from Stripe (?paid=1) but the webhook hasn't marked the order paid yet.
+  const [confirming, setConfirming] = useState(false);
   // Meta Pixel (only with marketing consent): the price/payment box is shown →
-  // InitiateCheckout; back from Stripe with the result paid → Purchase. Once per result.
+  // InitiateCheckout; the order becomes paid → Purchase, once per order, with the
+  // Stripe order id (from the return URL, or saved when checkout started) as eventID.
   useEffect(() => {
-    if (!result) return;
-    const value = { value: PRICE_PLN, currency: CURRENCY };
-    const search = new URLSearchParams(window.location.search);
-    if (!result.isPaid) pixelEventOnce(`checkout:${result.id}`, "InitiateCheckout");
-    else if (search.get("paid") === "1") {
-      // Order id from Stripe's return URL (cs_…); falls back to the result id.
-      const order = /^cs_[A-Za-z0-9_]+$/.test(search.get("order") ?? "") ? search.get("order")! : result.id;
-      pixelEventOnce(`purchase:${order}`, "Purchase", value, order);
-    }
-  }, [result]);
+    if (!result || confirming) return;
+    if (!result.isPaid) { trackCheckoutView(result.id); return; }
+    const fromUrl = new URLSearchParams(window.location.search).get("order") ?? "";
+    const order = /^cs_[A-Za-z0-9_]+$/.test(fromUrl) ? fromUrl : readPendingOrder(result.id);
+    if (!order) return; // paid without a checkout from this browser (e.g. a manual test unlock)
+    trackPurchase(order);
+    clearPendingOrder(result.id);
+  }, [result, confirming]);
   useEffect(() => {
     if (!result || result.isPaid) return;
     let active = true;
@@ -146,25 +159,27 @@ function ResultPage() {
     let active = true;
     const justPaid = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("paid") === "1";
     (async () => {
-      // Stripe redirects the browser back right after payment, but the webhook
-      // that flips is_paid can land a beat later — retry briefly in that case.
+      // Stripe sends the buyer back right away, but the webhook that marks the order
+      // paid arrives later (seconds; longer for BLIK). Keep checking until it does:
+      // every 2 s for the first minute, then every 10 s while the page is open.
       for (let attempt = 0; active; attempt++) {
         const value = await getResult(id);
         if (!active) return;
-        if (value?.isPaid || !justPaid || attempt >= 5) {
-          setResult(value);
-          setLoading(false);
-          return;
-        }
-        await delay(1000);
+        const waiting = justPaid && !!value && !value.isPaid;
+        setResult(value);
+        setConfirming(waiting);
+        setLoading(false);
+        if (!waiting) return;
+        await delay(attempt < 30 ? 2000 : 10000);
       }
     })();
     return () => { active = false; };
   }, [id]);
   const unlock = async () => {
     if (!consent || !terms || !result) return;
-    setBusy(true); trackEvent("InitiateCheckout", { resultId: result.id });
-    const { url } = await createCheckoutSession({ data: { resultId: result.id, origin: window.location.origin, acceptedTerms: terms, waivedWithdrawal: consent } });
+    setBusy(true); trackEvent("CheckoutClicked");
+    const { url, id: orderId } = await createCheckoutSession({ data: { resultId: result.id, origin: window.location.origin, acceptedTerms: terms, waivedWithdrawal: consent } });
+    savePendingOrder(result.id, orderId);
     window.location.href = url;
   };
   if (loading) return <main className="flex min-h-[65vh] items-center justify-center font-display text-3xl">{pl.result.loading}</main>;
@@ -209,6 +224,17 @@ function ResultPage() {
         )}
     </>
   );
+  if (confirming) {
+    return (
+      <main className="flex min-h-[65vh] items-center justify-center px-5 text-center">
+        <div>
+          <div className="analysis-pulse mx-auto flex size-20 items-center justify-center rounded-full bg-secondary text-primary"><Sparkles size={32} strokeWidth={1.4} /></div>
+          <h1 className="mt-8 font-display text-3xl md:text-4xl">{t.confirmingTitle}</h1>
+          <p className="mx-auto mt-3 max-w-md text-muted-foreground">{t.confirmingText}</p>
+        </div>
+      </main>
+    );
+  }
   // Paid, but the photo hasn't been analysed yet: that happens now, only after payment.
   if (result.isPaid && !isAnalysed(result)) return <PaidAnalysis resultId={result.id} male={male} onDone={setResult} />;
   const preview = isAnalysed(result) ? report.palette : previewPalette(result.answers);

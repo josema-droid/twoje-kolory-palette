@@ -8,6 +8,7 @@ import { AuthShell, FormMessage, authErrorMessage } from "@/components/auth-form
 import { pl } from "@/content/pl";
 import { sendEmailCode, verifyEmailCode, type CodePurpose } from "@/lib/api";
 import { safeRedirect } from "@/lib/utils";
+import { trackSignUp } from "@/lib/conversions";
 import { seo } from "@/lib/seo";
 
 // Must match "Email OTP Length" in Supabase → Authentication → Providers → Email.
@@ -47,7 +48,8 @@ function VerifyPage() {
     if (value.length !== CODE_LENGTH || busy) return;
     setBusy(true); setError(""); setNotice("");
     try {
-      await verifyEmailCode(email, value, purpose);
+      const account = await verifyEmailCode(email, value, purpose);
+      if (account.isNew) trackSignUp(account.id);
       if (recovery) await navigate({ to: "/nowe-haslo", search: { redirect } });
       else await navigate({ href: redirect ?? "/moje-wyniki" });
     } catch (err) {

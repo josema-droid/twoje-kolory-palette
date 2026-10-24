@@ -297,11 +297,14 @@ export async function signUp(email: string, password: string): Promise<SignUpOut
 // account on first use (the "your analysis is ready" step and the login page).
 export type CodePurpose = "signup" | "recovery" | "login";
 
-export async function verifyEmailCode(email: string, code: string, purpose: CodePurpose): Promise<AuthUser> {
+/** isNew: the account was created by this sign-up (used for the sign-up conversion event). */
+export async function verifyEmailCode(email: string, code: string, purpose: CodePurpose): Promise<AuthUser & { isNew: boolean }> {
   const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: purpose === "login" ? "email" : purpose });
   if (error) throw toAuthFailure(error);
   if (!data.user) throw new AuthFailure("unknown");
-  return toAuthUser(data.user);
+  // A code login also creates the account on first use: "new" = created in the last 30 min.
+  const isNew = purpose === "signup" || (purpose === "login" && Date.now() - new Date(data.user.created_at).getTime() < 30 * 60_000);
+  return { ...toAuthUser(data.user), isNew };
 }
 
 export async function sendEmailCode(email: string, purpose: CodePurpose): Promise<void> {

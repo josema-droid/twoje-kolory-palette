@@ -49,5 +49,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     });
 
     if (!session.url) throw new Error("Stripe did not return a checkout URL");
-    return { url: session.url };
+    // id = the order id (cs_…): the page keeps it so Meta's Purchase can use it as eventID.
+    return { url: session.url, id: session.id };
   });

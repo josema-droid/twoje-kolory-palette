@@ -30,7 +30,7 @@ export const pl = {
   landing: {
     meta: {
       title: "Twój Color — personalna analiza kolorystyczna online",
-      description: "Dowiedz się, jakie kolory ubrań, makijażu, włosów i biżuterii najlepiej podkreślają Twoją urodę. Personalna analiza kolorystyczna online — wystarczy kilka pytań i jedno zdjęcie.",
+      description: "Sprawdź, jakie kolory ubrań, makijażu, włosów i biżuterii najlepiej podkreślają Twoją urodę. Personalna analiza kolorystyczna online w kilka minut.",
     },
     cta: "Odkryj swoją paletę",
     ctaNote: "Personalna analiza kolorystyczna online",
@@ -353,6 +353,8 @@ export const pl = {
     ],
     pitchPrice: "39 zł jednorazowo · wynik zaraz po płatności · bez subskrypcji",
     pitchCta: "Odblokuj pełny raport",
+    confirmingTitle: "Potwierdzamy Twoją płatność…",
+    confirmingText: "To zwykle trwa kilka sekund (przy BLIK czasem dłużej). Nie zamykaj tej strony — za chwilę zobaczysz swój pełny raport.",
     analysingTitle: "Analizujemy Twoje zdjęcie…",
     analysingText: "Dziękujemy za zakup! Przygotowujemy Twój pełny raport — to potrwa kilka sekund.",
     photoNeededTitle: "Dodaj zdjęcie do analizy",
