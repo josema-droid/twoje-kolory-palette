@@ -41,6 +41,15 @@ function QuizPage() {
     sessionStorage.removeItem("twoje-kolory-answers");
   }, []);
 
+  // Drop-off inside the quiz: one event per question shown (number + id, never the
+  // answer), counted once per question even when going back. GA only.
+  const seenQuestions = useRef<string[]>([]);
+  useEffect(() => {
+    if (intro || checkpoint || seenQuestions.current.includes(questionId)) return;
+    seenQuestions.current.push(questionId);
+    trackEvent("QuizQuestion", { question_id: questionId, question_number: seenQuestions.current.length });
+  }, [intro, checkpoint, questionId]);
+
   const question = questionById(questionId, answers);
   const progress = progressForQuestion(questionId, answers);
   const previousId = previousQuestionId(questionId, answers);
