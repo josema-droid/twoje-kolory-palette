@@ -128,8 +128,13 @@ function ResultPage() {
   useEffect(() => {
     if (!result) return;
     const value = { value: PRICE_PLN, currency: CURRENCY };
-    if (!result.isPaid) pixelEventOnce(`checkout:${result.id}`, "InitiateCheckout", value);
-    else if (new URLSearchParams(window.location.search).get("paid") === "1") pixelEventOnce(`purchase:${result.id}`, "Purchase", value, `purchase-${result.id}`);
+    const search = new URLSearchParams(window.location.search);
+    if (!result.isPaid) pixelEventOnce(`checkout:${result.id}`, "InitiateCheckout");
+    else if (search.get("paid") === "1") {
+      // Order id from Stripe's return URL (cs_…); falls back to the result id.
+      const order = /^cs_[A-Za-z0-9_]+$/.test(search.get("order") ?? "") ? search.get("order")! : result.id;
+      pixelEventOnce(`purchase:${order}`, "Purchase", value, order);
+    }
   }, [result]);
   useEffect(() => {
     if (!result || result.isPaid) return;

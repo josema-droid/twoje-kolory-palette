@@ -42,7 +42,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       ],
       metadata: { resultId, consentAt: new Date().toISOString(), termsVersion: TERMS_VERSION },
       locale: "pl",
-      success_url: `${origin}/wynik/${resultId}?paid=1`,
+      // Stripe fills in {CHECKOUT_SESSION_ID}: the order id, used as the Meta Purchase eventID
+      // (the same id the webhook sees, so a future server-side event can be de-duplicated).
+      success_url: `${origin}/wynik/${resultId}?paid=1&order={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/wynik/${resultId}`,
     });
 
